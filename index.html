@@ -1,0 +1,1319 @@
+```html
+<!DOCTYPE html>
+<html lang="zh-TW" class="h-full bg-slate-900 text-slate-100">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>記帳士每日十題挑戰 App</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f7ff',
+              100: '#e0effe',
+              500: '#0284c7',
+              600: '#0369a1',
+              700: '#075985',
+              800: '#0c4a6e',
+              900: '#0f172a',
+            },
+            accent: {
+              500: '#10b981', // Emerald green
+              600: '#059669',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;700&display=swap');
+    body {
+      font-family: 'Noto Sans TC', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: rgba(15, 23, 42, 0.6);
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: rgba(51, 65, 85, 0.8);
+      border-radius: 3px;
+    }
+    /* Draggable floating calc effect */
+    .calc-shadow {
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.5);
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col bg-slate-950 text-slate-100 overflow-x-hidden">
+
+  <!-- Toast Notification System -->
+  <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full px-4"></div>
+
+  <!-- Header Banner / Notification Alert -->
+  <div id="reminder-banner" class="bg-amber-500/10 border-b border-amber-500/30 text-amber-200 px-4 py-2.5 flex items-center justify-between text-xs sm:text-sm">
+    <div class="flex items-center gap-2">
+      <span class="relative flex h-2.5 w-2.5">
+        <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+        <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+      </span>
+      <i class="fa-solid font-bold fa-triangle-exclamation text-amber-400"></i>
+      <span><strong>每日提醒：</strong> 今日尚未完成挑戰！快來練習保持考感。</span>
+    </div>
+    <button onclick="closeReminderBanner()" class="text-amber-300 hover:text-amber-100 transition-colors p-1">
+      <i class="fa-solid fa-xmark"></i>
+    </button>
+  </div>
+
+  <!-- Sticky Floating Calculator Action Button (FAB) -->
+  <div class="fixed bottom-12 right-5 z-40">
+    <button onclick="toggleCalculator()" class="bg-gradient-to-tr from-brand-600 to-accent-600 hover:from-brand-500 hover:to-accent-500 text-white p-3.5 sm:p-4 rounded-2xl shadow-xl shadow-brand-600/30 border border-slate-700/80 flex items-center gap-2 group transition-all duration-300 hover:scale-105 active:scale-95">
+      <i class="fa-solid fa-calculator text-lg sm:text-xl"></i>
+      <span class="hidden sm:inline text-xs font-bold tracking-wide">考用計算機</span>
+    </button>
+  </div>
+
+  <!-- Floating Pop-up Calculator Modal -->
+  <div id="calculator-modal" class="hidden fixed bottom-24 right-4 sm:right-8 z-50 w-72 sm:w-80 bg-slate-900 border border-slate-700/80 rounded-2xl p-4 calc-shadow backdrop-blur-xl">
+    <div class="flex items-center justify-between pb-3 mb-3 border-b border-slate-800 cursor-move" id="calc-header">
+      <div class="flex items-center gap-2 text-xs font-bold text-slate-300">
+        <i class="fa-solid fa-calculator text-brand-400"></i>
+        <span>記帳士考試計算機</span>
+      </div>
+      <button onclick="toggleCalculator()" class="text-slate-400 hover:text-white p-1 transition-colors">
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+
+    <!-- Screen Display -->
+    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3 mb-3 text-right">
+      <div id="calc-expression" class="text-[11px] text-slate-500 h-4 truncate"></div>
+      <div id="calc-display" class="text-xl sm:text-2xl font-mono font-bold text-emerald-400 truncate">0</div>
+    </div>
+
+    <!-- Keypad -->
+    <div class="grid grid-cols-4 gap-2 text-sm font-semibold">
+      <button onclick="calcClear()" class="p-2.5 bg-rose-500/20 text-rose-300 hover:bg-rose-500/30 rounded-lg transition-colors border border-rose-500/30">AC</button>
+      <button onclick="calcDelete()" class="p-2.5 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">DEL</button>
+      <button onclick="calcInput('%')" class="p-2.5 bg-slate-800 text-brand-300 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">%</button>
+      <button onclick="calcInput('/')" class="p-2.5 bg-brand-600/30 text-brand-300 hover:bg-brand-600/40 rounded-lg transition-colors border border-brand-500/30">÷</button>
+
+      <button onclick="calcInput('7')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">7</button>
+      <button onclick="calcInput('8')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">8</button>
+      <button onclick="calcInput('9')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">9</button>
+      <button onclick="calcInput('*')" class="p-2.5 bg-brand-600/30 text-brand-300 hover:bg-brand-600/40 rounded-lg transition-colors border border-brand-500/30">×</button>
+
+      <button onclick="calcInput('4')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">4</button>
+      <button onclick="calcInput('5')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">5</button>
+      <button onclick="calcInput('6')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">6</button>
+      <button onclick="calcInput('-')" class="p-2.5 bg-brand-600/30 text-brand-300 hover:bg-brand-600/40 rounded-lg transition-colors border border-brand-500/30">-</button>
+
+      <button onclick="calcInput('1')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">1</button>
+      <button onclick="calcInput('2')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">2</button>
+      <button onclick="calcInput('3')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">3</button>
+      <button onclick="calcInput('+')" class="p-2.5 bg-brand-600/30 text-brand-300 hover:bg-brand-600/40 rounded-lg transition-colors border border-brand-500/30">+</button>
+
+      <button onclick="calcToggleSign()" class="p-2.5 bg-slate-800 text-slate-300 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700">+/-</button>
+      <button onclick="calcInput('0')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">0</button>
+      <button onclick="calcInput('.')" class="p-2.5 bg-slate-800/80 text-slate-100 hover:bg-slate-700 rounded-lg transition-colors border border-slate-700/60">.</button>
+      <button onclick="calcCalculate()" class="p-2.5 bg-accent-600 text-white hover:bg-accent-500 rounded-lg transition-colors shadow-md border border-emerald-500/40">=</button>
+    </div>
+  </div>
+
+  <!-- Main Container -->
+  <div class="flex-1 flex flex-col max-w-5xl w-full mx-auto p-3 sm:p-6 pb-24">
+    
+    <!-- Top Navigation & Profile Header -->
+    <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-900/80 border border-slate-800 rounded-2xl p-4 sm:p-5 backdrop-blur-md mb-6 shadow-xl">
+      <div class="flex items-center gap-3">
+        <div class="bg-gradient-to-tr from-brand-600 to-accent-500 p-3 rounded-xl shadow-lg shadow-brand-500/20 text-white">
+          <i class="fa-solid fa-calculator text-xl sm:text-2xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg sm:text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-slate-400 bg-clip-text text-transparent">
+            記帳士每日十題挑戰
+          </h1>
+          <p class="text-xs text-slate-400 flex items-center gap-2 mt-0.5">
+            <span>專業考題實戰演練</span>
+            <span class="inline-block w-1 h-1 rounded-full bg-slate-600"></span>
+            <span id="header-date" class="text-brand-500 font-medium">--</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- User Stats Badges -->
+      <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end border-t sm:border-t-0 border-slate-800/80 pt-3 sm:pt-0">
+        <div class="bg-slate-800/90 border border-slate-700/60 rounded-xl px-3 py-1.5 flex items-center gap-2.5">
+          <i class="fa-solid fa-fire text-orange-500 text-lg animate-pulse"></i>
+          <div>
+            <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">連續打卡</div>
+            <div class="text-sm font-bold text-slate-100"><span id="streak-count">0</span> 天</div>
+          </div>
+        </div>
+        <div class="bg-slate-800/90 border border-slate-700/60 rounded-xl px-3 py-1.5 flex items-center gap-2.5">
+          <i class="fa-solid fa-circle-check text-emerald-400 text-lg"></i>
+          <div>
+            <div class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold">今日狀態</div>
+            <div id="today-status" class="text-sm font-bold text-amber-400">未完成</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Navigation Tabs -->
+    <nav class="flex bg-slate-900/90 border border-slate-800 p-1.5 rounded-xl mb-6 text-xs sm:text-sm font-medium gap-1 shadow-md overflow-x-auto custom-scrollbar">
+      <button onclick="switchTab('quiz')" id="tab-quiz" class="flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 bg-brand-600 text-white font-semibold shadow-md whitespace-nowrap">
+        <i class="fa-solid fa-pen-to-square"></i>
+        <span>今日挑戰</span>
+      </button>
+      <button onclick="switchTab('history')" id="tab-history" class="flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all duration-200 whitespace-nowrap">
+        <i class="fa-solid fa-clock-rotate-left text-amber-400"></i>
+        <span>歷史紀錄</span>
+      </button>
+      <button onclick="switchTab('wrong')" id="tab-wrong" class="flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all duration-200 whitespace-nowrap">
+        <i class="fa-solid fa-book-bookmark text-rose-400"></i>
+        <span>錯題本</span>
+        <span id="wrong-count-badge" class="bg-rose-500/20 text-rose-300 text-xs px-2 py-0.5 rounded-full border border-rose-500/30">0</span>
+      </button>
+      <button onclick="switchTab('stats')" id="tab-stats" class="flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all duration-200 whitespace-nowrap">
+        <i class="fa-solid fa-chart-pie text-cyan-400"></i>
+        <span>統計分析</span>
+      </button>
+      <button onclick="switchTab('settings')" id="tab-settings" class="flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all duration-200 whitespace-nowrap">
+        <i class="fa-solid fa-sliders text-indigo-400"></i>
+        <span>設定</span>
+      </button>
+    </nav>
+
+    <!-- TAB 1: DAILY QUIZ -->
+    <section id="view-quiz" class="tab-content flex-1 flex flex-col">
+      <!-- Quiz Intro / Ready Card -->
+      <div id="quiz-start-card" class="bg-slate-900/80 border border-slate-800 rounded-2xl p-6 sm:p-10 text-center flex flex-col items-center justify-center flex-1 shadow-xl">
+        <div class="w-16 h-16 bg-brand-500/10 border border-brand-500/20 rounded-2xl flex items-center justify-center text-brand-400 text-2xl mb-4">
+          <i class="fa-solid fa-list-check"></i>
+        </div>
+        <h2 class="text-xl sm:text-2xl font-bold text-white mb-2">每日 10 題精選考題練習</h2>
+        <p class="text-slate-400 text-sm max-w-md mb-6 leading-relaxed">
+          涵蓋國文、會計學概要、記帳法規大意、租稅申報實務、稅務法規大意等五大科目，各科兩題，無痛建立習慣！
+        </p>
+        
+        <div class="flex flex-wrap justify-center gap-2 mb-8 max-w-lg">
+          <span class="bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-book text-emerald-400"></i> 國文 (2題)</span>
+          <span class="bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-calculator text-cyan-400"></i> 會計學概要 (2題)</span>
+          <span class="bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-scale-balanced text-amber-400"></i> 記帳法規 (2題)</span>
+          <span class="bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-file-invoice-dollar text-purple-400"></i> 租稅申報實務 (2題)</span>
+          <span class="bg-slate-800 border border-slate-700 text-slate-300 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5"><i class="fa-solid fa-gavel text-rose-400"></i> 稅務法規 (2題)</span>
+        </div>
+
+        <button onclick="startDailyQuiz()" class="bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-500 hover:to-accent-500 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg shadow-brand-600/30 hover:shadow-brand-500/50 transition-all duration-300 transform hover:-translate-y-0.5 flex items-center gap-2">
+          <span>開始今日測驗</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+
+      <!-- Active Quiz Interface -->
+      <div id="quiz-active-card" class="hidden flex-1 flex flex-col bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-8 shadow-xl">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-5 border-b border-slate-800">
+          <div class="flex items-center gap-2.5">
+            <span id="current-subject-badge" class="bg-brand-500/20 border border-brand-500/30 text-brand-300 text-xs font-semibold px-3 py-1 rounded-md">
+              --
+            </span>
+            <span class="text-xs text-slate-400">單選題</span>
+          </div>
+          <div class="flex items-center gap-3 w-full sm:w-auto">
+            <div class="flex-1 sm:w-48 bg-slate-800 h-2 rounded-full overflow-hidden">
+              <div id="quiz-progress-bar" class="bg-gradient-to-r from-brand-500 to-accent-500 h-full w-0 transition-all duration-300"></div>
+            </div>
+            <span id="quiz-progress-text" class="text-xs font-bold text-slate-300 min-w-[50px] text-right">Q 1/10</span>
+          </div>
+        </div>
+
+        <div class="my-6 flex-1 flex flex-col">
+          <h3 id="question-text" class="text-base sm:text-lg font-medium text-slate-100 leading-relaxed mb-6">
+            --
+          </h3>
+
+          <div id="options-container" class="space-y-3">
+            <!-- Options injected by JS -->
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-5 border-t border-slate-800 mt-auto">
+          <button id="btn-prev-q" onclick="prevQuestion()" class="px-4 py-2.5 rounded-xl border border-slate-700 bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white transition-colors text-sm font-medium flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed">
+            <i class="fa-solid fa-chevron-left"></i> 上一題
+          </button>
+
+          <button id="btn-next-q" onclick="nextQuestion()" class="px-6 py-2.5 rounded-xl bg-brand-600 hover:bg-brand-500 text-white transition-colors text-sm font-semibold flex items-center gap-2 shadow-md">
+            下一題 <i class="fa-solid fa-chevron-right"></i>
+          </button>
+
+          <button id="btn-submit-q" onclick="submitQuiz()" class="hidden px-6 py-2.5 rounded-xl bg-gradient-to-r from-accent-600 to-emerald-500 hover:from-accent-500 hover:to-emerald-400 text-white transition-all text-sm font-semibold flex items-center gap-2 shadow-lg shadow-emerald-600/20">
+            <i class="fa-solid fa-paper-plane"></i> 交卷觀看解析
+          </button>
+        </div>
+      </div>
+
+      <!-- Quiz Completed / Result Summary -->
+      <div id="quiz-result-card" class="hidden flex-1 flex flex-col space-y-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 sm:p-8 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div class="flex flex-col sm:flex-row items-center gap-5 text-center sm:text-left">
+            <div id="score-circle" class="w-24 h-24 rounded-2xl bg-gradient-to-tr from-brand-600 to-accent-500 flex flex-col items-center justify-center text-white shadow-lg">
+              <span id="final-score" class="text-3xl font-extrabold">80</span>
+              <span class="text-[10px] opacity-80 font-medium">總分 / 100</span>
+            </div>
+            <div>
+              <div id="result-status-title" class="text-xl font-bold text-white mb-1">恭喜完成今日測驗！</div>
+              <p id="result-status-subtitle" class="text-sm text-slate-400 max-w-sm">
+                表現相當優異！維持每天 10 題的節奏，記帳士執照手到擒來。
+              </p>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap sm:flex-nowrap gap-3 w-full md:w-auto">
+            <button onclick="switchTab('history')" class="flex-1 sm:flex-initial px-4 py-2.5 bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-xl text-slate-200 text-sm font-medium transition-colors flex items-center justify-center gap-2">
+              <i class="fa-solid fa-clock-rotate-left text-amber-400"></i> 每日紀錄
+            </button>
+            <button onclick="resetAndRetake()" class="flex-1 sm:flex-initial px-4 py-2.5 bg-brand-600 hover:bg-brand-500 text-white rounded-xl text-sm font-semibold transition-colors flex items-center justify-center gap-2 shadow-md">
+              <i class="fa-solid fa-rotate-right"></i> 重新測驗
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-5 gap-3" id="subject-breakdown-grid"></div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+          <h3 class="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-4">
+            <i class="fa-solid fa-magnifying-glass-chart text-brand-400"></i>
+            本測驗詳細解答與法條/計算解析
+          </h3>
+
+          <div id="detailed-solutions-container" class="space-y-6"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: DAILY HISTORY RECORDS -->
+    <section id="view-history" class="tab-content hidden flex-1 flex flex-col space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 shadow-xl">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-clock-rotate-left text-amber-400"></i> 每日考題歷史紀錄
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">完整保存每日測驗成果，可隨時點擊回顧當時的答題狀況與解析</p>
+        </div>
+        <button onclick="clearHistoryRecords()" class="text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+          <i class="fa-solid fa-trash-can"></i> 清除歷史紀錄
+        </button>
+      </div>
+
+      <div id="history-records-list" class="space-y-4">
+        <!-- Dynamically filled history cards -->
+      </div>
+    </section>
+
+    <!-- TAB 3: WRONG ANSWERS NOTEBOOK -->
+    <section id="view-wrong" class="tab-content hidden flex-1 flex flex-col space-y-4">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h2 class="text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-book-bookmark text-rose-400"></i> 錯題收錄本
+          </h2>
+          <p class="text-xs text-slate-400 mt-1">累積錯題進行重點精準複習，掌握所有漏洞考點</p>
+        </div>
+        <button onclick="clearWrongNotebook()" class="text-xs bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1.5">
+          <i class="fa-solid fa-trash-can"></i> 清空錯題本
+        </button>
+      </div>
+
+      <div id="wrong-questions-list" class="space-y-4"></div>
+    </section>
+
+    <!-- TAB 4: STATISTICS & ANALYTICS -->
+    <section id="view-stats" class="tab-content hidden flex-1 flex flex-col space-y-6">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col">
+          <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+            <i class="fa-solid fa-chart-radar text-brand-400"></i> 五大科目實力雷達圖
+          </h3>
+          <p class="text-xs text-slate-400 mb-4">掌握各科強弱項，均衡佈局考點</p>
+          <div class="flex-1 flex items-center justify-center min-h-[260px] relative">
+            <canvas id="radarChart"></canvas>
+          </div>
+        </div>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl flex flex-col justify-between">
+          <div>
+            <h3 class="text-base font-bold text-white mb-1 flex items-center gap-2">
+              <i class="fa-solid fa-chart-simple text-accent-500"></i> 各科歷年平均正確率
+            </h3>
+            <p class="text-xs text-slate-400 mb-4">根據您最近答題紀錄綜合分析</p>
+          </div>
+          
+          <div id="subject-stats-bars" class="space-y-4 my-auto"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: SETTINGS -->
+    <section id="view-settings" class="tab-content hidden flex-1 flex flex-col space-y-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl space-y-6">
+        <h2 class="text-lg font-bold text-white pb-3 border-b border-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-sliders text-indigo-400"></i> 應用程式偏好設定
+        </h2>
+
+        <div class="space-y-4">
+          <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">每日推播提醒</h3>
+          
+          <div class="flex items-center justify-between p-4 bg-slate-800/60 rounded-xl border border-slate-700/60">
+            <div>
+              <div class="text-sm font-medium text-slate-200">開啟每日防怠惰提醒</div>
+              <div class="text-xs text-slate-400">若當天未於預定時間打開 App 答題，發送推播通知</div>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="setting-notify-toggle" class="sr-only peer" checked onchange="saveSettings()">
+              <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+            </label>
+          </div>
+
+          <div class="flex items-center justify-between p-4 bg-slate-800/60 rounded-xl border border-slate-700/60">
+            <div>
+              <div class="text-sm font-medium text-slate-200">提醒時間</div>
+              <div class="text-xs text-slate-400">設定每日定時推播時間點</div>
+            </div>
+            <input type="time" id="setting-notify-time" value="08:00" onchange="saveSettings()" class="bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-lg p-2 focus:ring-brand-500 focus:border-brand-500">
+          </div>
+        </div>
+
+        <div class="pt-6 border-t border-slate-800 space-y-4">
+          <h3 class="text-sm font-semibold text-slate-300 uppercase tracking-wider">開發測試與進度重置</h3>
+
+          <div class="flex flex-wrap gap-3">
+            <button onclick="simulateNotification()" class="px-4 py-2.5 bg-amber-500/10 border border-amber-500/30 text-amber-300 hover:bg-amber-500/20 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2">
+              <i class="fa-solid fa-bell"></i> 模擬發送防怠惰推播
+            </button>
+            <button onclick="toggleTodayCompletionStatus()" class="px-4 py-2.5 bg-brand-500/10 border border-brand-500/30 text-brand-300 hover:bg-brand-500/20 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2">
+              <i class="fa-solid fa-toggle-on"></i> 切換今日完成狀態 (測試)
+            </button>
+            <button onclick="resetAllAppData()" class="px-4 py-2.5 bg-rose-500/10 border border-rose-500/30 text-rose-300 hover:bg-rose-500/20 rounded-xl text-xs font-semibold transition-colors flex items-center gap-2">
+              <i class="fa-solid fa-trash-arrow-up"></i> 重置所有用戶數據
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- History Record Details Modal -->
+  <div id="history-modal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-3 sm:p-6 overflow-y-auto">
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden my-auto">
+      <div class="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between bg-slate-900">
+        <div>
+          <h3 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+            <i class="fa-solid fa-calendar-check text-brand-400"></i>
+            <span id="modal-history-date">--</span> 測驗詳情
+          </h3>
+          <p id="modal-history-score-text" class="text-xs text-slate-400 mt-0.5">--</p>
+        </div>
+        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-white p-2 text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="modal-history-solutions-container" class="p-4 sm:p-6 space-y-5 overflow-y-auto custom-scrollbar flex-1">
+        <!-- Injected via JS -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Fixed Quick Status Bar -->
+  <footer class="fixed bottom-0 left-0 right-0 bg-slate-950/90 border-t border-slate-800/80 backdrop-blur-md py-2 px-4 z-30">
+    <div class="max-w-5xl mx-auto flex items-center justify-between text-[11px] text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span>考題題庫版本：115年度最新稅制律法版</span>
+      </div>
+      <div>記帳士國家考試 專用題庫系統</div>
+    </div>
+  </footer>
+
+  <!-- SCRIPT LOGIC -->
+  <script>
+    // --- QUESTION BANK ---
+    const QUESTION_BANK = [
+      {
+        id: 101,
+        subject: "國文",
+        question: "下列公文用語與其說明，何者對應最為正確適當？",
+        options: [
+          "A. 「請 鑒核」用於平級機關之公文期望回應語",
+          "B. 「奉 悉」用於上級機關回覆下級機關公文之開頭用語",
+          "C. 「請 查照」用於上級機關行文給下級機關之期望指示語",
+          "D. 「惠請 惠予賜教」用於下級對上級之請示用語"
+        ],
+        answer: 2,
+        explanation: "【解析與考點】公文格式用語：<br>1. 「請 查照」為上級機關平行或下行文之常見期望用語。<br>2. 「請 鑒核」通常用於對上級機關之請示。<br>3. 「奉 悉」通常用於下級機關接獲上級機關公文後之陳述用語。"
+      },
+      {
+        id: 102,
+        subject: "國文",
+        question: "下列成語中，何者最常用於形容會計記帳或審計工作要求嚴謹、纖毫不差？",
+        options: [
+          "A. 巨細靡遺",
+          "B. 絲絲入扣",
+          "C. 明察秋毫",
+          "D. 嚴絲合縫"
+        ],
+        answer: 0,
+        explanation: "【解析】「巨細靡遺」形容大小事情全都包含在內，毫無遺漏，常用於形容帳務記錄與財務報導之完整性與嚴謹性。"
+      },
+      {
+        id: 201,
+        subject: "會計學概要",
+        question: "甲公司於 114 年初以 $100,000 取得一台設備，預計使用年限 5 年，殘值 $10,000。採雙倍餘額遞減法提列折舊，則第 2 年之折舊費用為多少？",
+        options: [
+          "A. $24,000",
+          "B. $21,600",
+          "C. $36,000",
+          "D. $18,000"
+        ],
+        answer: 0,
+        explanation: "【計算步驟與解析】<br>1. 折舊率 = (1 / 5) × 2 = 40%<br>2. 第 1 年折舊 = $100,000 × 40% = $40,000<br>3. 第 1 年底帳面價值 = $100,000 - $40,000 = $60,000<br>4. 第 2 年折舊 = 第 1 年底帳面價值 × 40% = $60,000 × 40% = <strong>$24,000</strong>。"
+      },
+      {
+        id: 202,
+        subject: "會計學概要",
+        question: "依據 IFRS 規範，公司收到顧客預付的訂金或貨款，在尚未交付商品或提供勞務前，應列為下列何者？",
+        options: [
+          "A. 合約資產 (Contract Assets)",
+          "B. 合約負債 (Contract Liabilities)",
+          "C. 預付費用 (Prepaid Expenses)",
+          "D. 營業外收入 (Non-operating Income)"
+        ],
+        answer: 1,
+        explanation: "【法條觀念與解析】<br>依據 IFRS 15「客戶合約之收入」，企業已收或應收客戶之對價，但尚未向客戶移轉商品或勞務時，應將該義務列為<strong>合約負債 (Contract Liabilities)</strong>。"
+      },
+      {
+        id: 301,
+        subject: "記帳法規大意",
+        question: "依商業會計法規定，商業會計憑證分為原始憑證與記帳憑證。下列何者屬於「記帳憑證」？",
+        options: [
+          "A. 統一發票與收據",
+          "B. 轉帳傳票與現金支出傳票",
+          "C. 出納進貨單與租賃契約",
+          "D. 薪金發放明細表"
+        ],
+        answer: 1,
+        explanation: "【法條依據與解析】<br>依商業會計法第 15 條及第 17 條規定：記帳憑證係指「現金收入傳票、現金支出傳票及轉帳傳票」。統一發票、收據等均屬於原始憑證。"
+      },
+      {
+        id: 302,
+        subject: "記帳法規大意",
+        question: "依記帳士法規定，記帳士得執行之業務範圍，下列何者「不包括」在內？",
+        options: [
+          "A. 受委託辦理商業會計記帳事項",
+          "B. 辦理各項稅捐申報及申請事項",
+          "C. 財務報表之查核簽證",
+          "D. 稅務諮詢事項"
+        ],
+        answer: 2,
+        explanation: "【法條依據與解析】<br>依記帳士法第 13 條，財務報表之「查核簽證」為專屬會計師（CPA）之業務權限，記帳士不得執行財務報表查核簽證。"
+      },
+      {
+        id: 401,
+        subject: "租稅申報實務",
+        question: "加值型及非加值型營業稅法規定，一般計稅之營業人申報營業稅時，原則上應每幾個月為一期，於次期開始幾日內向稽徵機關申報？",
+        options: [
+          "A. 每一個月為一期，10日內申報",
+          "B. 每兩個月為一期，15日內申報",
+          "C. 每三個月為一期，20日內申報",
+          "D. 每兩個月為一期，25日內申報"
+        ],
+        answer: 1,
+        explanation: "【法條依據與解析】<br>依加值型及非加值型營業稅法第 35 條：營業人除本法另有規定外，不論有無銷售額，應以<strong>每兩個月為一期</strong>，於<strong>次期開始十五日內</strong>填具申報書申報繳納。"
+      },
+      {
+        id: 402,
+        subject: "租稅申報實務",
+        question: "營利事業所得稅結算申報時，對於職工膳食費之免稅標準（列為費用上限），現行法規規定每人每月最多為多少元？",
+        options: [
+          "A. $2,400 元",
+          "B. $3,000 元",
+          "C. $1,800 元",
+          "D. $3,600 元"
+        ],
+        answer: 1,
+        explanation: "【法條依據與解析】<br>依營利事業所得稅查核準則第 88 條，自 112 年度起，營利事業實際供給膳食或按月定額發給員工膳食津貼，每人每月免徵所得稅上限已調升為 <strong>$3,000 元</strong>。"
+      },
+      {
+        id: 501,
+        subject: "稅務法規大意",
+        question: "依稅捐稽徵法規定，納稅義務人依法應繳納之稅捐，其法定「核課期間」在依法定期限申報之案件為幾年？",
+        options: [
+          "A. 3年",
+          "B. 5年",
+          "C. 7年",
+          "D. 10年"
+        ],
+        answer: 1,
+        explanation: "【法條依據與解析】<br>依稅捐稽徵法第 21 條：依法定期限辦理申報且無詐偽隱匿者，核課期間為 <strong>5 年</strong>；未於規定期間內申報或故意以詐欺逃漏稅者，核課期間為 <strong>7 年</strong>。"
+      },
+      {
+        id: 502,
+        subject: "稅務法規大意",
+        question: "依所得稅法規定，納稅義務人申報綜合所得稅房貸利息扣除額（購屋借款利息）時，每一申報戶每年扣除上限金額最高為多少元？",
+        options: [
+          "A. $100,000 元",
+          "B. $200,000 元",
+          "C. $300,000 元",
+          "D. $360,000 元"
+        ],
+        answer: 2,
+        explanation: "【法條依據與解析】<br>依所得稅法第 17 條：購屋借款利息每一申報戶每年扣除數額以 <strong>$300,000 元</strong>為限，並應先扣除儲蓄投資特別扣除額。"
+      }
+    ];
+
+    // --- APPLICATION STATE ---
+    let appState = {
+      streak: 0,
+      todayCompleted: false,
+      userAnswers: Array(10).fill(null),
+      currentQuestionIndex: 0,
+      wrongQuestionIds: [],
+      historyRecords: [], // Array of completed sessions
+      stats: {
+        "國文": { total: 0, correct: 0 },
+        "會計學概要": { total: 0, correct: 0 },
+        "記帳法規大意": { total: 0, correct: 0 },
+        "租稅申報實務": { total: 0, correct: 0 },
+        "稅務法規大意": { total: 0, correct: 0 }
+      },
+      settings: {
+        notifyEnabled: true,
+        notifyTime: "08:00"
+      }
+    };
+
+    let radarChartInstance = null;
+
+    // --- INITIALIZATION ---
+    window.onload = function() {
+      loadLocalStorage();
+      updateDateHeader();
+      updateHeaderBadges();
+      renderWrongQuestions();
+      renderHistoryRecords();
+      initChart();
+      
+      if (appState.todayCompleted) {
+        document.getElementById('reminder-banner').classList.add('hidden');
+      }
+    };
+
+    function updateDateHeader() {
+      const options = { year: 'numeric', month: 'long', day: 'numeric', weekday: 'long' };
+      document.getElementById('header-date').innerText = new Date().toLocaleDateString('zh-TW', options);
+    }
+
+    // --- LOCAL STORAGE HELPERS ---
+    function loadLocalStorage() {
+      const saved = localStorage.getItem('bookkeeper_quiz_app_data');
+      if (saved) {
+        try {
+          const parsed = JSON.parse(saved);
+          appState = { ...appState, ...parsed };
+        } catch (e) {
+          console.error("Failed to parse local storage", e);
+        }
+      }
+    }
+
+    function saveLocalStorage() {
+      localStorage.setItem('bookkeeper_quiz_app_data', JSON.stringify(appState));
+    }
+
+    function updateHeaderBadges() {
+      document.getElementById('streak-count').innerText = appState.streak;
+      const statusEl = document.getElementById('today-status');
+      if (appState.todayCompleted) {
+        statusEl.innerText = "已完成";
+        statusEl.className = "text-sm font-bold text-emerald-400";
+      } else {
+        statusEl.innerText = "未完成";
+        statusEl.className = "text-sm font-bold text-amber-400";
+      }
+      document.getElementById('wrong-count-badge').innerText = appState.wrongQuestionIds.length;
+    }
+
+    // --- TAB SWITCHING ---
+    function switchTab(tabKey) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      
+      const tabBtns = ['quiz', 'history', 'wrong', 'stats', 'settings'];
+      tabBtns.forEach(key => {
+        const btn = document.getElementById(`tab-${key}`);
+        if (key === tabKey) {
+          btn.className = "flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-all duration-200 bg-brand-600 text-white font-semibold shadow-md whitespace-nowrap";
+        } else {
+          btn.className = "flex-1 py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 transition-all duration-200 whitespace-nowrap";
+        }
+      });
+
+      document.getElementById(`view-${tabKey}`).classList.remove('hidden');
+
+      if (tabKey === 'stats') {
+        updateChartAndStats();
+      } else if (tabKey === 'wrong') {
+        renderWrongQuestions();
+      } else if (tabKey === 'history') {
+        renderHistoryRecords();
+      }
+    }
+
+    // --- QUIZ LOGIC ---
+    function startDailyQuiz() {
+      document.getElementById('quiz-start-card').classList.add('hidden');
+      document.getElementById('quiz-result-card').classList.add('hidden');
+      document.getElementById('quiz-active-card').classList.remove('hidden');
+
+      appState.currentQuestionIndex = 0;
+      appState.userAnswers = Array(10).fill(null);
+      renderQuestion();
+    }
+
+    function renderQuestion() {
+      const idx = appState.currentQuestionIndex;
+      const q = QUESTION_BANK[idx];
+
+      document.getElementById('current-subject-badge').innerText = q.subject;
+      document.getElementById('quiz-progress-text').innerText = `Q ${idx + 1}/10`;
+      document.getElementById('quiz-progress-bar').style.width = `${((idx + 1) / 10) * 100}%`;
+
+      document.getElementById('question-text').innerText = `${idx + 1}. ${q.question}`;
+
+      const optionsContainer = document.getElementById('options-container');
+      optionsContainer.innerHTML = '';
+
+      q.options.forEach((optText, optIdx) => {
+        const isSelected = appState.userAnswers[idx] === optIdx;
+        const btn = document.createElement('button');
+        btn.onclick = () => selectOption(optIdx);
+        btn.className = `w-full text-left p-4 rounded-xl border transition-all duration-200 flex items-center justify-between text-sm sm:text-base ${
+          isSelected 
+            ? 'bg-brand-600/20 border-brand-500 text-white shadow-md shadow-brand-500/10' 
+            : 'bg-slate-800/60 border-slate-700/80 text-slate-300 hover:bg-slate-800 hover:border-slate-600'
+        }`;
+
+        btn.innerHTML = `
+          <span>${optText}</span>
+          <div class="w-5 h-5 rounded-full border flex items-center justify-center text-xs ${
+            isSelected ? 'border-brand-400 bg-brand-500 text-white' : 'border-slate-600'
+          }">
+            ${isSelected ? '<i class="fa-solid fa-check"></i>' : ''}
+          </div>
+        `;
+        optionsContainer.appendChild(btn);
+      });
+
+      document.getElementById('btn-prev-q').disabled = idx === 0;
+
+      if (idx === 9) {
+        document.getElementById('btn-next-q').classList.add('hidden');
+        document.getElementById('btn-submit-q').classList.remove('hidden');
+      } else {
+        document.getElementById('btn-next-q').classList.remove('hidden');
+        document.getElementById('btn-submit-q').classList.add('hidden');
+      }
+    }
+
+    function selectOption(optIdx) {
+      appState.userAnswers[appState.currentQuestionIndex] = optIdx;
+      renderQuestion();
+    }
+
+    function prevQuestion() {
+      if (appState.currentQuestionIndex > 0) {
+        appState.currentQuestionIndex--;
+        renderQuestion();
+      }
+    }
+
+    function nextQuestion() {
+      if (appState.currentQuestionIndex < 9) {
+        appState.currentQuestionIndex++;
+        renderQuestion();
+      }
+    }
+
+    function submitQuiz() {
+      const unanswered = appState.userAnswers.filter(a => a === null).length;
+      if (unanswered > 0) {
+        if (!confirm(`您還有 ${unanswered} 題未填答，確定要現在交卷嗎？`)) {
+          return;
+        }
+      }
+
+      let correctCount = 0;
+      let newWrongIds = [...appState.wrongQuestionIds];
+
+      let subjectBreakdown = {
+        "國文": { total: 2, correct: 0 },
+        "會計學概要": { total: 2, correct: 0 },
+        "記帳法規大意": { total: 2, correct: 0 },
+        "租稅申報實務": { total: 2, correct: 0 },
+        "稅務法規大意": { total: 2, correct: 0 }
+      };
+
+      QUESTION_BANK.forEach((q, idx) => {
+        const uAns = appState.userAnswers[idx];
+        const isCorrect = uAns === q.answer;
+
+        if (isCorrect) {
+          correctCount++;
+          subjectBreakdown[q.subject].correct++;
+        } else {
+          if (!newWrongIds.includes(q.id)) {
+            newWrongIds.push(q.id);
+          }
+        }
+
+        if (!appState.stats[q.subject]) {
+          appState.stats[q.subject] = { total: 0, correct: 0 };
+        }
+        appState.stats[q.subject].total += 1;
+        if (isCorrect) appState.stats[q.subject].correct += 1;
+      });
+
+      const finalScore = correctCount * 10;
+      appState.wrongQuestionIds = newWrongIds;
+
+      if (!appState.todayCompleted) {
+        appState.todayCompleted = true;
+        appState.streak += 1;
+      }
+
+      // Save History Entry
+      const historyRecord = {
+        id: Date.now(),
+        date: new Date().toLocaleString('zh-TW', { dateStyle: 'medium', timeStyle: 'short' }),
+        score: finalScore,
+        userAnswers: [...appState.userAnswers],
+        breakdown: subjectBreakdown
+      };
+      appState.historyRecords.unshift(historyRecord); // prepend newest
+
+      saveLocalStorage();
+      updateHeaderBadges();
+      closeReminderBanner();
+
+      document.getElementById('quiz-active-card').classList.add('hidden');
+      document.getElementById('quiz-result-card').classList.remove('hidden');
+
+      renderResultSummary(finalScore, subjectBreakdown);
+      showToast("測驗完成！考題紀錄與解析已儲存", "success");
+    }
+
+    function renderResultSummary(score, breakdown) {
+      document.getElementById('final-score').innerText = score;
+      
+      const titleEl = document.getElementById('result-status-title');
+      const subtitleEl = document.getElementById('result-status-subtitle');
+
+      if (score >= 80) {
+        titleEl.innerText = "🎉 太棒了！表現非常優異！";
+        subtitleEl.innerText = "觀念十分清晰，繼續保持天天練習的節奏，高分上榜！";
+      } else if (score >= 60) {
+        titleEl.innerText = "💪 穩健及格！持續努力！";
+        subtitleEl.innerText = "對於核心觀念已有基本掌握，建議針對答錯題目檢視法條依據。";
+      } else {
+        titleEl.innerText = "🔥 仍有進步空間！再接再厲！";
+        subtitleEl.innerText = "別灰心！考前錯題都是寶貴經驗，點擊下方詳解好好複習盲點。";
+      }
+
+      const breakdownGrid = document.getElementById('subject-breakdown-grid');
+      breakdownGrid.innerHTML = '';
+
+      Object.keys(breakdown).forEach(subj => {
+        const item = breakdown[subj];
+        const percent = Math.round((item.correct / item.total) * 100);
+        
+        const card = document.createElement('div');
+        card.className = "bg-slate-900 border border-slate-800 p-3 rounded-xl flex flex-col items-center justify-center text-center";
+        card.innerHTML = `
+          <span class="text-[11px] text-slate-400 mb-1 truncate w-full">${subj}</span>
+          <span class="text-sm font-bold ${percent >= 100 ? 'text-emerald-400' : percent >= 50 ? 'text-amber-400' : 'text-rose-400'}">
+            ${item.correct} / ${item.total} 題
+          </span>
+        `;
+        breakdownGrid.appendChild(card);
+      });
+
+      const container = document.getElementById('detailed-solutions-container');
+      container.innerHTML = '';
+
+      QUESTION_BANK.forEach((q, idx) => {
+        const uAns = appState.userAnswers[idx];
+        const isCorrect = uAns === q.answer;
+
+        const solCard = document.createElement('div');
+        solCard.className = `p-4 sm:p-5 rounded-xl border ${
+          isCorrect ? 'bg-slate-800/40 border-slate-700/60' : 'bg-rose-950/10 border-rose-500/30'
+        }`;
+
+        solCard.innerHTML = `
+          <div class="flex items-start justify-between gap-3 mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2.5 py-0.5 rounded bg-slate-800 border border-slate-700 font-semibold text-slate-300">Q${idx + 1}</span>
+              <span class="text-xs text-brand-400 font-medium">[${q.subject}]</span>
+            </div>
+            <span class="text-xs font-bold px-2 py-0.5 rounded ${
+              isCorrect ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+            }">
+              ${isCorrect ? '<i class="fa-solid fa-check"></i> 答對' : '<i class="fa-solid fa-xmark"></i> 答錯'}
+            </span>
+          </div>
+
+          <p class="text-sm font-medium text-slate-100 mb-3">${q.question}</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
+            <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
+              <span class="text-slate-400">您的答案：</span>
+              <span class="font-bold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">
+                ${uAns !== null ? q.options[uAns] : '未填答'}
+              </span>
+            </div>
+            <div class="p-2.5 rounded-lg bg-slate-900/80 border border-slate-800">
+              <span class="text-slate-400">正確解答：</span>
+              <span class="font-bold text-emerald-400">${q.options[q.answer]}</span>
+            </div>
+          </div>
+
+          <div class="p-3 rounded-lg bg-brand-950/30 border border-brand-500/20 text-xs text-slate-300 leading-relaxed">
+            <div class="font-semibold text-brand-400 mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-gavel"></i> 法條依據與詳細解析：
+            </div>
+            ${q.explanation}
+          </div>
+        `;
+
+        container.appendChild(solCard);
+      });
+    }
+
+    function resetAndRetake() {
+      startDailyQuiz();
+    }
+
+    // --- DAILY HISTORY SYSTEM ---
+    function renderHistoryRecords() {
+      const container = document.getElementById('history-records-list');
+      container.innerHTML = '';
+
+      if (!appState.historyRecords || appState.historyRecords.length === 0) {
+        container.innerHTML = `
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center text-slate-400">
+            <i class="fa-solid fa-folder-open text-4xl text-slate-600 mb-3"></i>
+            <p class="text-base font-semibold text-white">尚無每日考題歷史紀錄</p>
+            <p class="text-xs text-slate-500 mt-1">完成每日 10 題測驗後，您的作答成績與題目解析將會自動儲存於此。</p>
+          </div>
+        `;
+        return;
+      }
+
+      appState.historyRecords.forEach((rec, idx) => {
+        const card = document.createElement('div');
+        card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg space-y-4";
+
+        let scoreBadgeClass = "bg-rose-500/20 text-rose-300 border-rose-500/30";
+        if (rec.score >= 80) scoreBadgeClass = "bg-emerald-500/20 text-emerald-300 border-emerald-500/30";
+        else if (rec.score >= 60) scoreBadgeClass = "bg-amber-500/20 text-amber-300 border-amber-500/30";
+
+        card.innerHTML = `
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2.5">
+              <span class="w-8 h-8 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center font-bold text-xs text-slate-300">
+                #${appState.historyRecords.length - idx}
+              </span>
+              <div>
+                <div class="text-sm font-bold text-slate-100">${rec.date}</div>
+                <div class="text-[11px] text-slate-400">每日 10 題精選測驗</div>
+              </div>
+            </div>
+            
+            <div class="flex items-center gap-3 self-end sm:self-auto">
+              <div class="px-3 py-1 rounded-xl border ${scoreBadgeClass} font-extrabold text-sm">
+                ${rec.score} 分
+              </div>
+            </div>
+          </div>
+
+          <!-- Subject breakdown mini tags -->
+          <div class="flex flex-wrap gap-2 text-xs">
+            ${Object.keys(rec.breakdown).map(subj => {
+              const b = rec.breakdown[subj];
+              return `<span class="bg-slate-800/80 border border-slate-700 text-slate-300 px-2.5 py-1 rounded-md">${subj}: <strong class="${b.correct === b.total ? 'text-emerald-400' : 'text-slate-200'}">${b.correct}/${b.total}</strong></span>`;
+            }).join('')}
+          </div>
+
+          <!-- Action buttons -->
+          <div class="flex gap-2 pt-1">
+            <button onclick="viewHistoryDetails(${rec.id})" class="flex-1 py-2 px-3 bg-brand-600/20 border border-brand-500/30 hover:bg-brand-600/30 text-brand-300 rounded-xl text-xs font-semibold transition-colors flex items-center justify-center gap-1.5">
+              <i class="fa-solid fa-eye"></i> 查看該日完整解析
+            </button>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function viewHistoryDetails(recordId) {
+      const rec = appState.historyRecords.find(r => r.id === recordId);
+      if (!rec) return;
+
+      document.getElementById('modal-history-date').innerText = rec.date;
+      document.getElementById('modal-history-score-text').innerText = `測驗得分：${rec.score} / 100 分`;
+
+      const container = document.getElementById('modal-history-solutions-container');
+      container.innerHTML = '';
+
+      QUESTION_BANK.forEach((q, idx) => {
+        const uAns = rec.userAnswers[idx];
+        const isCorrect = uAns === q.answer;
+
+        const solCard = document.createElement('div');
+        solCard.className = `p-4 rounded-xl border ${
+          isCorrect ? 'bg-slate-800/40 border-slate-700/60' : 'bg-rose-950/10 border-rose-500/30'
+        }`;
+
+        solCard.innerHTML = `
+          <div class="flex items-start justify-between gap-3 mb-2">
+            <div class="flex items-center gap-2">
+              <span class="text-xs px-2 py-0.5 rounded bg-slate-800 border border-slate-700 font-semibold text-slate-300">Q${idx + 1}</span>
+              <span class="text-xs text-brand-400 font-medium">[${q.subject}]</span>
+            </div>
+            <span class="text-xs font-bold px-2 py-0.5 rounded ${
+              isCorrect ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-rose-500/20 text-rose-300 border border-rose-500/30'
+            }">
+              ${isCorrect ? '<i class="fa-solid fa-check"></i> 答對' : '<i class="fa-solid fa-xmark"></i> 答錯'}
+            </span>
+          </div>
+
+          <p class="text-xs sm:text-sm font-medium text-slate-100 mb-3">${q.question}</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs mb-3">
+            <div class="p-2 rounded-lg bg-slate-950/80 border border-slate-800">
+              <span class="text-slate-400">當時填答：</span>
+              <span class="font-bold ${isCorrect ? 'text-emerald-400' : 'text-rose-400'}">
+                ${uAns !== null ? q.options[uAns] : '未填答'}
+              </span>
+            </div>
+            <div class="p-2 rounded-lg bg-slate-950/80 border border-slate-800">
+              <span class="text-slate-400">正確答案：</span>
+              <span class="font-bold text-emerald-400">${q.options[q.answer]}</span>
+            </div>
+          </div>
+
+          <div class="p-2.5 rounded-lg bg-brand-950/30 border border-brand-500/20 text-xs text-slate-300 leading-relaxed">
+            <div class="font-semibold text-brand-400 mb-1 flex items-center gap-1.5">
+              <i class="fa-solid fa-gavel"></i> 法條/計算解析：
+            </div>
+            ${q.explanation}
+          </div>
+        `;
+
+        container.appendChild(solCard);
+      });
+
+      document.getElementById('history-modal').classList.remove('hidden');
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('history-modal').classList.add('hidden');
+    }
+
+    function clearHistoryRecords() {
+      if (!appState.historyRecords || appState.historyRecords.length === 0) return;
+      if (confirm("確定要清空所有的每日考題歷史紀錄嗎？")) {
+        appState.historyRecords = [];
+        saveLocalStorage();
+        renderHistoryRecords();
+        showToast("歷史紀錄已清空", "info");
+      }
+    }
+
+    // --- WRONG NOTEBOOK ---
+    function renderWrongQuestions() {
+      const container = document.getElementById('wrong-questions-list');
+      container.innerHTML = '';
+
+      if (appState.wrongQuestionIds.length === 0) {
+        container.innerHTML = `
+          <div class="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center text-slate-400">
+            <i class="fa-solid fa-circle-check text-4xl text-emerald-500 mb-3"></i>
+            <p class="text-base font-semibold text-white">太優秀了！目前沒有錯題！</p>
+            <p class="text-xs text-slate-500 mt-1">在測驗中答錯的題目將會自動納入此處供重點複習。</p>
+          </div>
+        `;
+        return;
+      }
+
+      appState.wrongQuestionIds.forEach(id => {
+        const q = QUESTION_BANK.find(item => item.id === id);
+        if (!q) return;
+
+        const card = document.createElement('div');
+        card.className = "bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-3 shadow-lg";
+
+        card.innerHTML = `
+          <div class="flex items-center justify-between">
+            <span class="text-xs bg-brand-500/20 text-brand-300 border border-brand-500/30 px-2.5 py-0.5 rounded font-medium">
+              ${q.subject}
+            </span>
+            <button onclick="removeWrongQuestion(${q.id})" class="text-xs text-slate-400 hover:text-rose-400 transition-colors flex items-center gap-1">
+              <i class="fa-solid fa-check"></i> 移出錯題本
+            </button>
+          </div>
+
+          <h4 class="text-sm font-semibold text-slate-100">${q.question}</h4>
+
+          <div class="p-3 bg-slate-950/60 rounded-xl border border-slate-800 text-xs space-y-1">
+            <div class="text-emerald-400 font-bold">正確解答：${q.options[q.answer]}</div>
+          </div>
+
+          <div class="p-3 bg-slate-800/40 rounded-xl text-xs text-slate-300 leading-relaxed border border-slate-700/40">
+            ${q.explanation}
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    function removeWrongQuestion(id) {
+      appState.wrongQuestionIds = appState.wrongQuestionIds.filter(qId => qId !== id);
+      saveLocalStorage();
+      updateHeaderBadges();
+      renderWrongQuestions();
+      showToast("已從錯題本移出", "info");
+    }
+
+    function clearWrongNotebook() {
+      if (appState.wrongQuestionIds.length === 0) return;
+      if (confirm("確定要清空所有錯題紀錄嗎？")) {
+        appState.wrongQuestionIds = [];
+        saveLocalStorage();
+        updateHeaderBadges();
+        renderWrongQuestions();
+        showToast("錯題本已清空", "info");
+      }
+    }
+
+    // --- CHART & STATS ---
+    function initChart() {
+      const ctx = document.getElementById('radarChart').getContext('2d');
+      
+      radarChartInstance = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['國文', '會計學概要', '記帳法規', '租稅申報', '稅務法規'],
+          datasets: [{
+            label: '實力指標 (%)',
+            data: [80, 80, 80, 80, 80],
+            backgroundColor: 'rgba(2, 132, 199, 0.25)',
+            borderColor: '#0284c7',
+            borderWidth: 2,
+            pointBackgroundColor: '#10b981',
+            pointBorderColor: '#fff',
+            pointHoverBackgroundColor: '#fff',
+            pointHoverBorderColor: '#10b981'
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            r: {
+              angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
+              grid: { color: 'rgba(255, 255, 255, 0.1)' },
+              pointLabels: { color: '#cbd5e1', font: { size: 11, family: 'Noto Sans TC' } },
+              ticks: { display: false, beginAtZero: true, max: 100 }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function updateChartAndStats() {
+      const subjects = ['國文', '會計學概要', '記帳法規大意', '租稅申報實務', '稅務法規大意'];
+      const percentages = subjects.map(s => {
+        const item = appState.stats[s];
+        if (!item || item.total === 0) return 80;
+        return Math.round((item.correct / item.total) * 100);
+      });
+
+      if (radarChartInstance) {
+        radarChartInstance.data.datasets[0].data = percentages;
+        radarChartInstance.update();
+      }
+
+      const barsContainer = document.getElementById('subject-stats-bars');
+      barsContainer.innerHTML = '';
+
+      subjects.forEach((subj, idx) => {
+        const pct = percentages[idx];
+        const row = document.createElement('div');
+        row.className = "space-y-1.5";
+        row.innerHTML = `
+          <div class="flex justify-between text-xs">
+            <span class="text-slate-300 font-medium">${subj}</span>
+            <span class="font-bold text-slate-200">${pct}%</span>
+          </div>
+          <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+            <div class="h-full bg-gradient-to-r from-brand-500 to-accent-500 rounded-full transition-all duration-500" style="width: ${pct}%"></div>
+          </div>
+        `;
+        barsContainer.appendChild(row);
+      });
+    }
+
+    // --- FLOATING CALCULATOR ENGINE ---
+    let calcCurrentInput = "0";
+    let calcExpression = "";
+
+    function toggleCalculator() {
+      const modal = document.getElementById('calculator-modal');
+      modal.classList.toggle('hidden');
+    }
+
+    function updateCalcDisplay() {
+      document.getElementById('calc-display').innerText = calcCurrentInput;
+      document.getElementById('calc-expression').innerText = calcExpression;
+    }
+
+    function calcInput(char) {
+      if (calcCurrentInput === "0" && !isNaN(char)) {
+        calcCurrentInput = char;
+      } else {
+        if (["+", "-", "*", "/", "%"].includes(char)) {
+          calcExpression += ` ${calcCurrentInput} ${char}`;
+          calcCurrentInput = "0";
+        } else {
+          calcCurrentInput += char;
+        }
+      }
+      updateCalcDisplay();
+    }
+
+    function calcClear() {
+      calcCurrentInput = "0";
+      calcExpression = "";
+      updateCalcDisplay();
+    }
+
+    function calcDelete() {
+      if (calcCurrentInput.length > 1) {
+        calcCurrentInput = calcCurrentInput.slice(0, -1);
+      } else {
+        calcCurrentInput = "0";
+      }
+      updateCalcDisplay();
+    }
+
+    function calcToggleSign() {
+      if (calcCurrentInput !== "0") {
+        if (calcCurrentInput.startsWith("-")) {
+          calcCurrentInput = calcCurrentInput.substring(1);
+        } else {
+          calcCurrentInput = "-" + calcCurrentInput;
+        }
+        updateCalcDisplay();
+      }
+    }
+
+    function calcCalculate() {
+      try {
+        const fullExpr = calcExpression + " " + calcCurrentInput;
+        // Safe evaluation for basic operations
+        const sanitized = fullExpr.replace(/×/g, '*').replace(/÷/g, '/');
+        const result = eval(sanitized);
+        calcCurrentInput = String(Number(result.toFixed(6)));
+        calcExpression = "";
+      } catch (e) {
+        calcCurrentInput = "錯誤";
+      }
+      updateCalcDisplay();
+    }
+
+    // --- SETTINGS & TEST UTILITIES ---
+    function saveSettings() {
+      appState.settings.notifyEnabled = document.getElementById('setting-notify-toggle').checked;
+      appState.settings.notifyTime = document.getElementById('setting-notify-time').value;
+      saveLocalStorage();
+      showToast("設定已儲存", "success");
+    }
+
+    function simulateNotification() {
+      showToast(`🔔 推播模擬：[${appState.settings.notifyTime}] 今日尚未完成記帳士10題挑戰！快來練習保持考感！`, "warning", 5000);
+      document.getElementById('reminder-banner').classList.remove('hidden');
+    }
+
+    function toggleTodayCompletionStatus() {
+      appState.todayCompleted = !appState.todayCompleted;
+      saveLocalStorage();
+      updateHeaderBadges();
+      showToast(`今日狀態已切換為：${appState.todayCompleted ? '已完成' : '未完成'}`, "info");
+    }
+
+    function resetAllAppData() {
+      if (confirm("警告：這將會完全重置您的連勝天數、答題紀錄與錯題本！確定要重置嗎？")) {
+        localStorage.removeItem('bookkeeper_quiz_app_data');
+        location.reload();
+      }
+    }
+
+    function closeReminderBanner() {
+      document.getElementById('reminder-banner').classList.add('hidden');
+    }
+
+    // --- TOAST SYSTEM ---
+    function showToast(message, type = "info", duration = 3000) {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      
+      let borderColors = "border-brand-500 bg-slate-900 text-slate-100";
+      if (type === "success") borderColors = "border-emerald-500 bg-slate-900 text-slate-100";
+      if (type === "warning") borderColors = "border-amber-500 bg-slate-900 text-slate-100";
+      if (type === "info") borderColors = "border-cyan-500 bg-slate-900 text-slate-100";
+
+      toast.className = `pointer-events-auto p-3.5 rounded-xl border shadow-xl text-xs sm:text-sm font-medium flex items-center gap-2.5 transition-all duration-300 transform translate-y-2 opacity-0 ${borderColors}`;
+      toast.innerHTML = `
+        <i class="fa-solid ${type === 'success' ? 'fa-circle-check text-emerald-400' : type === 'warning' ? 'fa-bell text-amber-400' : 'fa-circle-info text-cyan-400'} text-base"></i>
+        <span>${message}</span>
+      `;
+
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 50);
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, duration);
+    }
+  </script>
+</body>
+</html>
+```
