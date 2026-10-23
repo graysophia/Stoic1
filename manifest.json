@@ -1,0 +1,24 @@
+{
+  "name": "日日斯多噶",
+  "short_name": "日日斯多噶",
+  "description": "每日斯多葛反思、心情日記與夥伴養成",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f8d35c",
+  "theme_color": "#3f5946",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
