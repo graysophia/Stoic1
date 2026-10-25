@@ -187,6 +187,14 @@ textarea{width:100%;min-height:105px;border:1px solid var(--line);border-radius:
   mask-image:none!important;
 }
 </style>
+<style id="stoic-spacing-adjustments">
+/* 聯絡表單：縮小訊息欄位與提醒文字之間的空白。 */
+#creatorContact #contactMessage{display:block;}
+#creatorContact #creatorContactForm > p:not(.contact-status){margin:8px 0 12px;}
+/* 成長說明書：兩個標題到下方說明文字採用一致間距。 */
+#petSection #petBook > b:first-child{display:block;margin:0;}
+#petSection #petBook > p{margin:0 0 14px;}
+</style>
 </head><body><main class="app">
 <header class="top"><div><div class="brand">日日斯多噶</div><div class="tag">Daily Stoic · 把注意力帶回自己</div></div><button class="iconBtn" onclick="goToday()">⌂</button></header>
 <button id="install" class="install">📱 加到手機桌面</button>
