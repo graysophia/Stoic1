@@ -195,7 +195,29 @@ textarea{width:100%;min-height:105px;border:1px solid var(--line);border-radius:
 #petSection #petBook > b:first-child{display:block;margin:0;}
 #petSection #petBook > p{margin:0 0 14px;}
 </style>
-</head><body><main class="app">
+<style id="stoic-three-features-style">
+.stoic-search{margin-top:18px;border-top:1px solid var(--line);padding-top:14px}.stoic-search label,.stoic-week-label{display:block;font-size:14px;font-weight:750;margin-bottom:8px}.stoic-search input,.stoic-week-label+textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);font:inherit}.stoic-results{margin-top:8px;max-height:270px;overflow:auto}.stoic-result{display:block;width:100%;text-align:left;padding:10px;border:1px solid var(--line);border-radius:10px;background:#f7f8f3;margin:6px 0;color:var(--ink)}.stoic-result b{display:block;font-size:13px}.stoic-result span{display:block;font-size:12px;color:var(--muted);margin-top:3px;overflow-wrap:anywhere}.stoic-week-nav,.stoic-week-footer,.stoic-backup-actions{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}.stoic-week-nav{margin-bottom:14px}.stoic-week-nav button{padding:7px 10px;font-size:12px}.stoic-week-nav span{font-size:13px;color:var(--muted)}.stoic-week-metrics{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}.stoic-week-metrics span{background:var(--soft);border-radius:10px;padding:9px;font-size:13px;flex:1;min-width:100px}.stoic-week-question{font-size:13px;line-height:1.8;color:var(--muted);margin:8px 0 14px}.stoic-week-footer{margin-top:10px}.stoic-backup{margin-top:14px;padding:13px;background:var(--soft);border:1px solid var(--line);border-radius:13px}.stoic-backup p{font-size:13px;line-height:1.7}.stoic-backup-actions{justify-content:flex-start}.stoic-backup-actions button{font-size:13px;padding:8px 12px}
+</style><style id="stoic-sunday-style">.stoic-sunday-overlay[hidden]{display:none!important}.stoic-sunday-overlay{position:fixed;inset:0;z-index:99999;background:rgba(26,34,27,.65);display:flex;align-items:center;justify-content:center;padding:16px}.stoic-sunday-panel{background:var(--paper,#fff);color:var(--ink,#253229);border-radius:18px;padding:20px;width:min(560px,100%);max-height:85dvh;overflow:auto;box-shadow:0 16px 50px #0004}.stoic-sunday-panel h3{margin:0 0 12px}.stoic-sunday-body>p{font-size:14px;line-height:1.7}.stoic-sunday-topic{border-top:1px solid var(--line,#ddd);padding:12px 0}.stoic-sunday-topic b{display:block;margin-bottom:8px}.stoic-sunday-topic p{font-size:13px;line-height:1.8;margin:5px 0}.stoic-sunday-panel>button{margin-top:12px;width:100%}</style><style id="stoic-feature-button-consistency">
+/* 新增功能按鈕統一沿用「聯絡創作者」的配色與字級。 */
+#stoicSearchResults .stoic-result,
+#stoicBackupReminder .stoic-backup-actions button,
+#stoicSundayModal #stoicSundayClose {
+  background:var(--soft);
+  color:var(--green);
+  border:1px solid var(--line);
+  font-size:14px;
+  font-weight:800;
+  line-height:21px;
+}
+</style><style id="stoic-backup-popup-style">
+.stoic-backup-overlay[hidden]{display:none!important}
+.stoic-backup-overlay{position:fixed;inset:0;z-index:99998;background:rgba(26,34,27,.65);display:flex;align-items:center;justify-content:center;padding:16px}
+.stoic-backup-panel{background:var(--paper,#fff);color:var(--ink,#253229);border-radius:18px;padding:20px;width:min(480px,100%);max-height:85dvh;overflow:auto;box-shadow:0 16px 50px #0004;margin:0}
+.stoic-backup-panel>b{display:block;font-size:17px;line-height:1.6}
+.stoic-backup-panel>p{margin:12px 0 18px;font-size:14px;line-height:1.8}
+.stoic-backup-panel .stoic-backup-actions{display:flex;gap:10px}
+.stoic-backup-panel .stoic-backup-actions button{flex:1;min-width:0}
+</style></head><body><main class="app">
 <header class="top"><div><div class="brand">日日斯多噶</div><div class="tag">Daily Stoic · 把注意力帶回自己</div></div><button class="iconBtn" onclick="goToday()">⌂</button></header>
 <button id="install" class="install">📱 加到手機桌面</button>
 <section class="card hero"><div class="dateLine"><div><div class="date" id="date"></div><div class="muted" id="weekday"></div></div><div class="badge" id="streak">連續 0 天</div></div><span class="theme" id="theme"></span><div class="quote" id="quote"></div><div class="explainTitle">今天想告訴你</div><div class="explain" id="explain"></div><div class="practice"><b>🌱 今日練習</b><div id="practice" style="margin-top:5px"></div></div></section>
@@ -205,12 +227,14 @@ textarea{width:100%;min-height:105px;border:1px solid var(--line);border-radius:
 <div class="pet"><div class="avatar" id="avatar"><img id="petArt" src="data:image/webp;base64,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" alt="小哲的成長造型與名稱"></div><div style="flex:1;min-width:0"><div class="petName" id="petDisplayName">小哲</div><div class="small" id="petStageLabel" style="margin-top:3px;font-size:12px;font-weight:700;color:#765c24" aria-live="polite">初始的蛋</div><div class="small" id="petText"></div><div class="bar"><div class="fill" id="fill"></div></div><div class="small" id="petXP" style="margin-top:7px"></div></div></div>
 <div class="petMessage" id="petMessage" aria-live="polite"></div>
 <div class="petActions"><button class="secondary" id="petChatButton" onclick="petInteract()">💬 與小哲聊聊</button><button class="secondary" id="petMemorialBtn" onclick="openPetMemorial()">🏆 畢業相簿</button><button class="secondary" id="petSettingsToggle" onclick="togglePetSettings()" aria-expanded="false">⚙️ 夥伴設定</button><button class="secondary" onclick="togglePetBook()">📖 成長說明書</button></div>
-<div id="petSettings" hidden><div class="petGrid"><label>名字<input id="petCustomName" maxlength="12" placeholder="小哲"></label><label>性別<select id="petGender"><option value="neutral">無性別</option><option value="male">公</option><option value="female">母</option></select></label><label>個性<select id="petPersonality"><option value="gentle">溫柔陪伴</option><option value="wise">沉穩睿智</option><option value="playful">活潑幽默</option><option value="brave">勇敢鼓勵</option></select></label></div><button class="secondary" onclick="completePetSettings()">✓ 完成設定並收合</button></div>
+<div id="petSettings" hidden><div class="petGrid"><label>名字<input id="petCustomName" maxlength="12" placeholder="小哲"></label><label>性別<select id="petGender"><option value="neutral">無性別</option><option value="male">公</option><option value="female">母</option></select></label><label>個性<select id="petPersonality"><option value="gentle">溫柔陪伴</option><option value="wise">沉穩睿智</option><option value="playful">活潑幽默</option><option value="brave">勇敢鼓勵</option></select></label></div></div>
 <div id="petBook" class="petBook" hidden></div>
 <div class="small" style="margin-top:12px">每天一點練習，陪伴心靈夥伴慢慢成長，解鎖更多驚喜與變化。</div>
 <div class="stats"><div class="stat"><b id="days">0</b><span>修行天數</span></div><div class="stat"><b id="writes">0</b><span>書寫次數</span></div><div class="stat"><b id="moodCount">0</b><span>心情紀錄</span></div></div></section>
-<section class="card"><div class="calendarTitle"><h3>我的人生軌跡</h3><div class="monthNav"><button onclick="changeMonth(-1)">‹</button><span class="monthName" id="monthName"></span><button onclick="changeMonth(1)">›</button></div></div><div class="cal" id="cal"></div></section>
-<section class="card"><h3>💾 我的資料</h3><div class="tools dataTools"><button class="secondary" onclick="exportData()">⬇️ 匯出我的日記</button><label class="fileLabel">⬆️ 匯入我的日記<input id="importFile" type="file" accept=".json" hidden></label><button class="secondary" onclick="exportTxtDiary()">📄 下載 TXT 日記</button></div><p class="small">目前以本機儲存，並提供完整匯出／匯入.json檔，未儲存於雲端資料庫。</p></section>
+<section class="card"><div class="calendarTitle"><h3>我的人生軌跡</h3><div class="monthNav"><button onclick="changeMonth(-1)">‹</button><span class="monthName" id="monthName"></span><button onclick="changeMonth(1)">›</button></div></div><div class="cal" id="cal"></div>
+<div class="stoic-search"><label for="stoicSearch">🔍 搜尋過去的自己</label><input id="stoicSearch" type="search" placeholder="輸入日記或練習關鍵字" autocomplete="off" aria-label="輸入日記或練習關鍵字"><div id="stoicSearchResults" class="stoic-results" aria-live="polite"></div></div></section>
+
+<section class="card"><h3>💾 我的資料</h3><div class="tools dataTools"><button class="secondary" onclick="exportData()">⬇️ 匯出我的日記</button><label class="fileLabel">⬆️ 匯入我的日記<input id="importFile" type="file" accept=".json" hidden></label><button class="secondary" onclick="exportTxtDiary()">📄 下載 TXT 日記</button></div><p class="small">目前以本機儲存，並提供完整匯出／匯入.json檔，未儲存於雲端資料庫。</p><div id="stoicBackupReminder" class="stoic-backup-overlay" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="stoicBackupTitle"><div class="stoic-backup stoic-backup-panel"><b id="stoicBackupTitle">📦 你的日記已經 30 天沒有備份了</b><p>這些日子累積的想法值得珍惜，建議匯出 JSON 備份，妥善保存。</p><div class="stoic-backup-actions"><button type="button" class="secondary" id="stoicBackupNow">立即備份</button><button type="button" class="secondary" id="stoicBackupLater">稍後提醒</button></div></div></div></section>
 
 <!-- 聯絡創作者：表單留在本站，收件信箱只由後端管理 -->
 <style>
@@ -484,12 +508,11 @@ function updatePet(){
  if(!petBook.hidden)drawPetBook();
 }
 function drawPetBook(){petBook.innerHTML="<b>修行筆記</b><p>每一次真誠地面對自己，都可能帶來一點改變。下一次蛻變何時發生，留給你和夥伴一起發現。</p><b>成長能量</b><div>每日心情 +5；心情日記 +8～20；今日練習反思 +15～35；今日回應 +5。日記每增加 10 字額外 +3，練習每增加 10 字額外 +4；每個日期最高 65 。每隻夥伴從領養時的 base 能量起獨立累積。每個日期依內容計算一次，重複儲存不會重複加分；修改紀錄會重新計算。</div>"}
-function togglePetSettings(){let el=document.getElementById("petSettings"),b=document.getElementById("petSettingsToggle");el.hidden=!el.hidden;b.setAttribute("aria-expanded",String(!el.hidden));b.textContent=el.hidden?"⚙️ 夥伴設定":"⚙️ 收合設定"}
-function completePetSettings(){savePetSetting();petConfig().settingsCompleted=true;localStorage.setItem(KEY,JSON.stringify(S));let el=document.getElementById("petSettings");el.hidden=true;let b=document.getElementById("petSettingsToggle");b.textContent="⚙️ 夥伴設定";b.setAttribute("aria-expanded","false")}
+function togglePetSettings(){let el=document.getElementById("petSettings"),b=document.getElementById("petSettingsToggle");el.hidden=!el.hidden;b.setAttribute("aria-expanded",String(!el.hidden));b.textContent=el.hidden?"⚙️ 夥伴設定":"⚙️ 完成設定"}
 function togglePetBook(){petBook.hidden=!petBook.hidden;if(!petBook.hidden)drawPetBook()}
 function petInteract(){let c=petConfig();c.talks=(c.talks||0)+1;localStorage.setItem(KEY,JSON.stringify(S));showPetDialogue(petLine(c.talks))}
 function savePetSetting(){let c=petConfig();c.name=petCustomName.value.trim().slice(0,12)||"小哲";c.gender=petGender.value;c.personality=petPersonality.value;localStorage.setItem(KEY,JSON.stringify(S));updatePet()}
-addEventListener("DOMContentLoaded",()=>{if(!petConfig().settingsCompleted){document.getElementById("petSettings").hidden=false;document.getElementById("petSettingsToggle").textContent="⚙️ 收合設定";document.getElementById("petSettingsToggle").setAttribute("aria-expanded","true")}["petCustomName","petGender","petPersonality"].forEach(id=>document.getElementById(id).addEventListener("change",savePetSetting))});
+addEventListener("DOMContentLoaded",()=>{["petCustomName","petGender","petPersonality"].forEach(id=>document.getElementById(id).addEventListener("change",savePetSetting))});
 function updateStats(){let k=Object.keys(S.days);days.textContent=k.length;writes.textContent=k.filter(x=>S.days[x].note||S.days[x].practiceNote).length;moodCount.textContent=k.filter(x=>S.days[x].mood).length;let d=new Date(localToday()+"T00:00:00"),c=0;while(S.days[iso(d)]){c++;d.setDate(d.getDate()-1)}streak.textContent=`連續 ${c} 天`}
 function toastMsg(x){toast.textContent=x;toast.style.display="block";setTimeout(()=>toast.style.display="none",1300)}
 function exportTxtDiary(){
@@ -518,7 +541,7 @@ function openPetIntro(restarting=false){
 }
 function escapePetText(s){return String(s).replace(/[&<>"']/g,ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));}
 function confirmPetAdoption(){if(!selectedSpecies)return;let c=petConfig();let name=document.getElementById('introPetName').value.trim().slice(0,12)||'小哲';
- c.name=name;c.species=(selectedSpecies==='secret'?'dino':selectedSpecies);c.adoptedAt=localToday();c.baseXP=petTotal();c.appearanceIndex=0;c.lastEvolutionDate=c.adoptedAt;c.completed=false;c.completionPending=false;c.archived=false;c.settingsCompleted=true;c.talks=0;
+ c.name=name;c.species=(selectedSpecies==='secret'?'dino':selectedSpecies);c.adoptedAt=localToday();c.baseXP=petTotal();c.appearanceIndex=0;c.lastEvolutionDate=c.adoptedAt;c.completed=false;c.completionPending=false;c.archived=false;c.talks=0;
  localStorage.setItem(KEY,JSON.stringify(S));document.getElementById('petIntro').classList.remove('visible');document.body.classList.remove('petIntroOpen');document.getElementById('petSettings').hidden=true;document.getElementById('petSettingsToggle').textContent='⚙️ 夥伴設定';document.getElementById('petSettingsToggle').setAttribute('aria-expanded','false');petMessage.textContent='';render();}
 addEventListener('DOMContentLoaded',()=>{if(!petConfig().species)openPetIntro(false);});
 
@@ -647,7 +670,7 @@ addEventListener('DOMContentLoaded',sync);
 </script>
 
 <!-- 小哲：僅在畫面顯示時裁去 PNG 內建的底部階段文字，原始 240 張圖片完全不變。 -->
-<script>
+<div id="stoicSundayModal" class="stoic-sunday-overlay" hidden aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="stoicSundayTitle"><div class="stoic-sunday-panel"><h3 id="stoicSundayTitle">📖 本週斯多噶修行回顧</h3><div id="stoicSundayBody" class="stoic-sunday-body"></div><button type="button" id="stoicSundayClose" class="secondary">關閉回顧，開始今天</button></div></div><script>
 (()=>{
   const pet=document.getElementById('petArt');
   if(!pet)return;
@@ -674,4 +697,81 @@ addEventListener('DOMContentLoaded',sync);
   if(pet.complete)showArtworkOnly();
 })();
 </script>
-</body></html>
+<style id="stoic-week-topic-style">
+.stoic-week-topics{display:grid;gap:10px;margin:12px 0}
+.stoic-week-topic{border:1px solid var(--line,#e0e5d8);border-radius:12px;padding:12px;background:var(--soft,#f6f8f1)}
+.stoic-week-topic b{display:block;margin-bottom:5px}
+.stoic-week-topic p{margin:0;line-height:1.65}
+</style>
+<script id="stoic-three-features-script">
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const dayData=()=> (typeof S!=='undefined'&&S&&S.days&&typeof S.days==='object')?S.days:{};
+const localKey=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+const clean=t=>String(t||'').replace(/\s+/g,' ').trim();
+// Search all user-written daily text, never send it to an external service.
+const search=$('stoicSearch'), results=$('stoicSearchResults');
+function runSearch(){
+ const q=clean(search.value).toLocaleLowerCase();results.replaceChildren();if(!q)return;
+ const matches=Object.entries(dayData()).filter(([date,d])=>d&&[d.note,d.practiceNote].some(v=>clean(v).toLocaleLowerCase().includes(q))).sort((a,b)=>b[0].localeCompare(a[0]));
+ if(!matches.length){results.textContent='找不到符合的日記紀錄。';return;}
+ const frag=document.createDocumentFragment();
+ for(const [date,d] of matches.slice(0,60)){
+  const btn=document.createElement('button');btn.type='button';btn.className='stoic-result';
+  const title=document.createElement('b');title.textContent=date;
+  const excerpt=document.createElement('span');const content=[d.note,d.practiceNote].map(clean).find(x=>x.toLocaleLowerCase().includes(q))||'';excerpt.textContent=content.length>105?content.slice(0,105)+'…':content;
+  btn.append(title,excerpt);btn.addEventListener('click',()=>{if(typeof pick==='function')pick(date);document.getElementById('date')?.scrollIntoView({behavior:'smooth',block:'start'});});frag.append(btn);
+ }
+ results.append(frag);if(matches.length>60){const more=document.createElement('p');more.className='small';more.textContent=`共找到 ${matches.length} 筆，顯示最近 60 筆。`;results.append(more);}
+}
+search.addEventListener('input',runSearch);
+// Every local Sunday, show this week's Monday–Saturday Stoic lessons for dates with actual practice records.
+const weekStart=d=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()-((x.getDay()+6)%7));return x;};
+const weeklyModal=$('stoicSundayModal');
+function sundayReview(){
+ const today=new Date();if(today.getDay()!==0)return;
+ const monday=weekStart(today),sundayKey=localKey(today),seenKey='stoic-sunday-review-shown-'+sundayKey;
+ if(localStorage.getItem(seenKey)==='1')return;
+ const items=[];
+ for(let i=0;i<6;i++){
+  const d=new Date(monday);d.setDate(d.getDate()+i);
+  const date=localKey(d),r=dayData()[date];
+  if(!r||![r.note,r.practiceNote,r.mood,r.reflection].some(v=>clean(v)))continue;
+  const lesson=typeof entry==='function'?entry(date):null;
+  if(lesson)items.push({date,lesson});
+ }
+ if(!items.length)return;
+ const body=$('stoicSundayBody');body.replaceChildren();
+ const intro=document.createElement('p');intro.textContent=`本週週一至週六，你在 ${items.length} 天留下了修行紀錄。一起重溫當天的斯多噶思想。`;body.append(intro);
+ for(const {date,lesson} of items){
+  const item=document.createElement('article');item.className='stoic-sunday-topic';
+  const title=document.createElement('b');title.textContent=`${date.slice(5).replace('-','/')} · ${clean(lesson.theme)||'斯多噶練習'}`;
+  const thought=document.createElement('p');thought.textContent=clean(lesson.thought);
+  const explain=document.createElement('p');explain.textContent=clean(lesson.explain);
+  item.append(title,thought,explain);body.append(item);
+ }
+ weeklyModal.hidden=false;weeklyModal.setAttribute('aria-hidden','false');
+ const close=()=>{weeklyModal.hidden=true;weeklyModal.setAttribute('aria-hidden','true');localStorage.setItem(seenKey,'1');backupDue();};
+ $('stoicSundayClose').onclick=close;
+ weeklyModal.onclick=e=>{if(e.target===weeklyModal)close();};
+}
+// Show a gentle reminder after 30 days of journaling without a known JSON backup.
+const backupKey='stoic-last-json-backup-v1',laterKey='stoic-backup-remind-later-v1',reminder=$('stoicBackupReminder');
+function backupDue(){
+ const entries=Object.keys(dayData()).filter(k=>/^\d{4}-\d\d-\d\d$/.test(k)).sort();if(!entries.length){reminder.hidden=true;return;}
+ const now=Date.now(),last=Number(localStorage.getItem(backupKey)||0),snooze=Number(localStorage.getItem(laterKey)||0),first=new Date(entries[0]+'T00:00:00').getTime();
+ const due=now-first>=30*86400000&&now-last>=30*86400000&&now>=snooze;
+ reminder.hidden=!due || !weeklyModal.hidden;reminder.setAttribute('aria-hidden',String(reminder.hidden));
+}
+$('stoicBackupNow').addEventListener('click',()=>{if(typeof exportData==='function')exportData();});
+$('stoicBackupLater').addEventListener('click',()=>{localStorage.setItem(laterKey,String(Date.now()+7*86400000));backupDue();});
+// Wrap existing export instead of changing its JSON schema or filename.
+if(typeof exportData==='function'){
+ const original=exportData;exportData=function(...args){const result=original.apply(this,args);localStorage.setItem(backupKey,String(Date.now()));localStorage.removeItem(laterKey);backupDue();return result;};
+}
+// Existing imports may replace data; refresh the new views afterwards.
+$('importFile')?.addEventListener('change',()=>setTimeout(()=>{runSearch();backupDue();},400));
+sundayReview();backupDue();
+})();
+</script></body></html>
