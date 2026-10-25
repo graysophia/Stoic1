@@ -328,7 +328,7 @@ function updatePet(){
  petText.textContent="今日狀態 · "+PET_CURRENT_ACTION;
  document.getElementById("petChatButton").textContent="💬 與"+(c.name||"小哲")+"聊聊";
  fill.style.width=pct+"%";
- petXP.textContent="內心修行 · "+shownXP+" / "+targetXP;
+ petXP.textContent="成長能量 · "+shownXP+" / "+targetXP;
  if(!petMessage.textContent.trim())showPetDialogue(petLine(0));
  petCustomName.value=c.name||"小哲";petGender.value=c.gender||"neutral";petPersonality.value=c.personality||"gentle";
  if(!petBook.hidden)drawPetBook();
