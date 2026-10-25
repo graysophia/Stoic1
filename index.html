@@ -166,8 +166,8 @@ textarea{width:100%;min-height:105px;border:1px solid var(--line);border-radius:
 #petSection .avatar{overflow:hidden!important;}
 #petSection .avatar #petArt{
   top:0!important;left:0!important;width:100%!important;
-  height:125%!important;max-height:none!important;
-  object-fit:fill!important;object-position:top center!important;
+  height:100%!important;max-height:100%!important;
+  object-fit:contain!important;object-position:center center!important;
   -webkit-mask-image:none!important;mask-image:none!important;
   border-radius:0!important;
 }
@@ -538,8 +538,8 @@ addEventListener('DOMContentLoaded',sync);
     try{
       const c=document.createElement('canvas');
       c.width=pet.naturalWidth;
-      // 四種圖的文字均位於圖檔下方；保留上方 80% 的角色繪圖區。
-      c.height=Math.round(pet.naturalHeight*.80);
+      // 保留完整角色區（約 82%），僅去除與角色分離的底部文字。
+      c.height=Math.round(pet.naturalHeight*0.82);
       const ctx=c.getContext('2d');
       ctx.imageSmoothingEnabled=false;
       ctx.drawImage(pet,0,0);
