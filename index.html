@@ -159,7 +159,35 @@ textarea{width:100%;min-height:105px;border:1px solid var(--line);border-radius:
 #petIntro .petChoices .petChoice.secretChoice.unlocked .secretMark{display:none!important}
 #petIntro .petChoices .petChoice.secretChoice .dinoPreview{display:none!important}
 #petIntro .petChoices .petChoice.secretChoice.unlocked .dinoPreview{display:block!important}
-</style></head><body><main class="app">
+</style>
+<style id="pet-hide-embedded-caption">
+/* PNG 原檔仍保留底部名稱；網站只顯示上方角色，名稱由 petStageLabel 顯示。
+   透明 PNG 為 256x256，底部文字位於約 80% 以下。 */
+#petSection .avatar{overflow:hidden!important;}
+#petSection .avatar #petArt{
+  top:0!important;left:0!important;width:100%!important;
+  height:125%!important;max-height:none!important;
+  object-fit:fill!important;object-position:top center!important;
+  -webkit-mask-image:none!important;mask-image:none!important;
+  border-radius:0!important;
+}
+#petSection #petStageLabel{display:block!important;}
+/* 2026-10-25：角色顯示區改為純黃色，取消所有白黃漸層與漸層遮罩。 */
+#petSection .avatar{
+  background:#f6d557!important;
+  background-image:none!important;
+  background-blend-mode:normal!important;
+  border:1px solid #e6c54a!important;
+  box-shadow:none!important;
+}
+#petSection .avatar #petArt{
+  background:transparent!important;
+  background-image:none!important;
+  -webkit-mask-image:none!important;
+  mask-image:none!important;
+}
+</style>
+</head><body><main class="app">
 <header class="top"><div><div class="brand">日日斯多噶</div><div class="tag">Daily Stoic · 把注意力帶回自己</div></div><button class="iconBtn" onclick="goToday()">⌂</button></header>
 <button id="install" class="install">📱 加到手機桌面</button>
 <section class="card hero"><div class="dateLine"><div><div class="date" id="date"></div><div class="muted" id="weekday"></div></div><div class="badge" id="streak">連續 0 天</div></div><span class="theme" id="theme"></span><div class="quote" id="quote"></div><div class="explainTitle">今天想告訴你</div><div class="explain" id="explain"></div><div class="practice"><b>🌱 今日練習</b><div id="practice" style="margin-top:5px"></div></div></section>
