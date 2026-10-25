@@ -245,9 +245,38 @@ textarea{width:100%;min-height:105px;border:1px solid var(--line);border-radius:
 </section>
 <!-- 免費公開瀏覽次數：Counter API（從安裝後開始累計） -->
 <div class="small" id="stoicVisitCounter" style="text-align:left;line-height:1.5;margin:12px 0 8px;">
-  已有 <div class="counterapi" ns="graysophia.github.io" key="stoic1-home-visits" action="view" noCss="true" noIcon="true" noLink="true" noAnim="true" style="display:inline;">…</div> 次造訪，讓斯多噶種子持續發芽。
+  已有 <span id="stoicVisitCount">載入中</span> 次造訪，讓斯多噶種子持續發芽。
 </div>
-<script async src="https://counterapi.com/c.js?ns=graysophia.github.io"></script>
+<script>
+(function(){
+  var number=document.getElementById('stoicVisitCount');
+  var callbackName='stoicCounterResponse';
+  var finished=false;
+  var tag=document.createElement('script');
+  var timer;
+  function fail(){
+    if(finished)return;
+    finished=true;
+    number.textContent='暫時無法取得';
+    if(tag.parentNode)tag.parentNode.removeChild(tag);
+    clearTimeout(timer);
+  }
+  window[callbackName]=function(result){
+    if(finished)return;
+    var value=result && result.value;
+    if(typeof value!=='number' && !/^\d+$/.test(String(value)))return fail();
+    finished=true;
+    number.textContent=Number(value).toLocaleString('zh-TW');
+    clearTimeout(timer);
+    if(tag.parentNode)tag.parentNode.removeChild(tag);
+  };
+  tag.onerror=fail;
+  timer=setTimeout(fail,10000);
+  tag.async=true;
+  tag.src='https://counterapi.com/api/graysophia.github.io/view/stoic1-home-visits?callback='+callbackName;
+  document.head.appendChild(tag);
+})();
+</script>
 <footer class="small" style="line-height:1.5;margin-top:0">內容為與 ChatGPT 協作，原創設計、整理與改寫。<div>日日斯多噶 © 2026 graysophia. All rights reserved.</div><div>保留所有依法享有之著作權利。</div></footer>
 <script>
 (()=>{
