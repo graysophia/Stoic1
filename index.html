@@ -234,7 +234,7 @@ function petActionForThisOpen(){
 }
 const PET_CURRENT_ACTION=petActionForThisOpen();
 function petConfig(){if(!S.pet||typeof S.pet!=="object")S.pet={name:"小哲",gender:"neutral",personality:"gentle",dailyState:"auto",talks:0};if(S.pet.species==="secret"){S.pet.species="dino";localStorage.setItem(KEY,JSON.stringify(S));}return S.pet}
-function petPoints(r){if(!r||typeof r!=="object")return 0;let mood=r.mood?5:0,n=(r.note||"").trim(),p=(r.practiceNote||"").trim();return mood+(n?Math.min(20,8+Math.floor(n.length/10)*3):0)+(p?Math.min(35,15+Math.floor(p.length/10)*4):0)+(r.reflection?5:0)}
+function petPoints(r){if(!r||typeof r!=="object")return 0;let mood=r.mood?5:0,n=(r.note||"").trim(),p=(r.practiceNote||"").trim();return Math.min(65,mood+(n?Math.min(20,8+Math.floor(n.length/10)*3):0)+(p?Math.min(35,15+Math.floor(p.length/10)*4):0)+(r.reflection?5:0))}
 function petTotal(){return Object.values(S.days||{}).reduce((a,r)=>a+petPoints(r),0)}
 function petStage(x){let i=0;for(let j=0;j<PET_STAGES.length;j++)if(x>=PET_STAGES[j][1])i=j;return i}
 function petState(){let c=petConfig();if(c.dailyState!=="auto"&&PET_STATES[c.dailyState])return c.dailyState;let r=S.days[localToday()]||{},m=r.mood||"";if(m==="焦慮")return"worried";if(m==="疲憊")return"tired";if(m==="開心")return"happy";if(m==="生氣")return"thinking";if(m==="有力量")return"brave";if(m==="平靜")return"calm";if(r.practiceNote)return"reading";return["curious","resting","thinking","calm"][new Date(localToday()+"T00:00:00").getDate()%4]}
@@ -301,15 +301,10 @@ const PET_SPECIES_LABELS={"chick":["初始的蛋","破殼而出","剛出生","�
 function petAppearance(x){
  const c=petConfig(),today=localToday();
  if(!c.adoptedAt)return 0;
- const adopted=Date.parse(c.adoptedAt+'T00:00:00Z');
- const current=Date.parse(today+'T00:00:00Z');
- const elapsed=Number.isFinite(adopted)?Math.max(0,Math.floor((current-adopted)/86400000)):0;
+ // Each companion earns evolution XP only after adoption; old diaries and total XP remain unchanged.
  const progressXP=Math.max(0,x-(Number(c.baseXP)||0));
- const xpEligible=Math.min(59,Math.floor(progressXP/24));
- // 89 天完成 59 次外觀變化；第一個完整養成日即可破殼。
- const dayEligible=Math.min(59,elapsed>0?Math.max(1,Math.floor(elapsed*59/89)):0);
- const eligible=Math.min(xpEligible,dayEligible);
- // 補足已符合的進化階段，避免錯過更新日期而永久落後；既有階段不倒退。
+ const eligible=Math.min(59,Math.floor(progressXP/65));
+ // Never roll back an already unlocked appearance when records are edited or imported.
  const previous=Number.isInteger(c.appearanceIndex)?Math.max(0,Math.min(59,c.appearanceIndex)):0;
  c.appearanceIndex=Math.max(previous,eligible);
  if(c.appearanceIndex>previous||!c.lastEvolutionDate)c.lastEvolutionDate=today;
@@ -318,9 +313,27 @@ function petAppearance(x){
  return c.appearanceIndex;
 }
 const PET_IMAGE_LABELS=["初始的蛋", "破殼而出", "剛出生", "好奇張望", "搖擺走路", "蹦蹦跳跳", "學會站立", "拍動小翅膀", "練習飛翔", "開心成長", "溫暖的日常", "午睡時光", "喜歡學習", "小小冒險家", "迎向挑戰", "靜靜思考", "遮風擋雨", "更加勇敢", "探索世界", "結交朋友", "羽毛漸豐", "活力奔跑", "勇敢嘗試", "登高遠眺", "專注練習", "接受挫折", "再次出發", "享受過程", "發現興趣", "內心更堅定", "靜心冥想", "閱讀思考", "獨自旅行", "欣賞風景", "幫助他人", "面對風雨", "保持平靜", "學會放下", "心懷感恩", "更加成熟", "羽色變化", "展開雙翼", "迎向朝陽", "耀眼羽冠", "力量累積", "閃耀光芒", "翱翔天際", "守護身邊", "光之軌跡", "鳳鳥之姿", "華麗蛻變", "光輝羽翼", "星空翱翔", "溫暖守護", "鳳凰之形", "內在光芒", "自由飛翔", "智慧與平靜", "閃耀重生", "真正的鳳凰"];
-function updatePet(){let c=petConfig(),x=petTotal(),i=petStage(x),next=PET_STAGES[i+1],base=PET_STAGES[i][1],cap=next?next[1]:Math.max(x,base+1),pct=next?Math.min(100,100*(x-base)/(cap-base)):100;
-let appearance=petAppearance(x);document.getElementById("petArt").src=PET_IMAGE_SETS[c.species||"chick"][appearance];document.getElementById("petStageLabel").textContent=(PET_SPECIES_LABELS[c.species||"chick"]||PET_IMAGE_LABELS)[appearance]||PET_IMAGE_LABELS[appearance]||"初始的蛋";if(c.completionPending&&!document.getElementById("petIntro").classList.contains("visible")){c.completionPending=false;localStorage.setItem(KEY,JSON.stringify(S));setTimeout(()=>openPetIntro(true),80);}petDisplayName.textContent=c.name||"小哲";petText.textContent="今日狀態 · "+PET_CURRENT_ACTION;document.getElementById("petChatButton").textContent="💬 與"+(c.name||"小哲")+"聊聊";fill.style.width=pct+"%";petXP.textContent="內心修行 · "+x+" 成長能量";if(!petMessage.textContent.trim())showPetDialogue(petLine(0));petCustomName.value=c.name||"小哲";petGender.value=c.gender||"neutral";petPersonality.value=c.personality||"gentle";if(!petBook.hidden)drawPetBook()}
-function drawPetBook(){petBook.innerHTML="<b>修行筆記</b><p>每一次真誠地面對自己，都可能帶來一點改變。下一次蛻變何時發生，留給你和夥伴一起發現。</p><b>成長能量</b><div>每日心情 +5；心情日記 +8～20；今日練習反思 +15～35；今日回應 +5。日記每增加 10 字額外 +3，練習每增加 10 字額外 +4；每日最高 65。每個日期依內容計算一次，重複儲存不會重複加分；修改紀錄會重新計算。</div>"}
+function updatePet(){
+ let c=petConfig(),x=petTotal(),appearance=petAppearance(x);
+ const progressXP=Math.max(0,x-(Number(c.baseXP)||0));
+ // The next 65-XP cycle is relative to the current unlocked appearance.
+ // This prevents a rolled-back bar if an already unlocked appearance is preserved.
+ const targetXP=59*65;
+ const shownXP=Math.min(targetXP,progressXP);
+ const pct=100*shownXP/targetXP;
+ document.getElementById("petArt").src=PET_IMAGE_SETS[c.species||"chick"][appearance];
+ document.getElementById("petStageLabel").textContent=(PET_SPECIES_LABELS[c.species||"chick"]||PET_IMAGE_LABELS)[appearance]||PET_IMAGE_LABELS[appearance]||"初始的蛋";
+ if(c.completionPending&&!document.getElementById("petIntro").classList.contains("visible")){c.completionPending=false;localStorage.setItem(KEY,JSON.stringify(S));setTimeout(()=>openPetIntro(true),80);}
+ petDisplayName.textContent=c.name||"小哲";
+ petText.textContent="今日狀態 · "+PET_CURRENT_ACTION;
+ document.getElementById("petChatButton").textContent="💬 與"+(c.name||"小哲")+"聊聊";
+ fill.style.width=pct+"%";
+ petXP.textContent="內心修行 · "+shownXP+" / "+targetXP;
+ if(!petMessage.textContent.trim())showPetDialogue(petLine(0));
+ petCustomName.value=c.name||"小哲";petGender.value=c.gender||"neutral";petPersonality.value=c.personality||"gentle";
+ if(!petBook.hidden)drawPetBook();
+}
+function drawPetBook(){petBook.innerHTML="<b>修行筆記</b><p>每一次真誠地面對自己，都可能帶來一點改變。下一次蛻變何時發生，留給你和夥伴一起發現。</p><b>成長能量</b><div>每日心情 +5；心情日記 +8～20；今日練習反思 +15～35；今日回應 +5。日記每增加 10 字額外 +3，練習每增加 10 字額外 +4；每個日期最高 65 。每隻夥伴從領養時的 base 能量起獨立累積。每個日期依內容計算一次，重複儲存不會重複加分；修改紀錄會重新計算。</div>"}
 function togglePetSettings(){let el=document.getElementById("petSettings"),b=document.getElementById("petSettingsToggle");el.hidden=!el.hidden;b.setAttribute("aria-expanded",String(!el.hidden));b.textContent=el.hidden?"⚙️ 夥伴設定":"⚙️ 收合設定"}
 function completePetSettings(){savePetSetting();petConfig().settingsCompleted=true;localStorage.setItem(KEY,JSON.stringify(S));let el=document.getElementById("petSettings");el.hidden=true;let b=document.getElementById("petSettingsToggle");b.textContent="⚙️ 夥伴設定";b.setAttribute("aria-expanded","false")}
 function togglePetBook(){petBook.hidden=!petBook.hidden;if(!petBook.hidden)drawPetBook()}
@@ -367,7 +380,7 @@ openPetIntro=function(restarting=false){
  document.querySelector('#introCard .introIcon').style.display=restarting?'none':'';
  document.getElementById('introTitle').style.display=restarting?'none':'';
  document.getElementById('introDescription').style.display=restarting?'none':'';
- document.getElementById('introConfirm').textContent=restarting?'開始新的 90 天旅程 →':'開始我的心靈旅程 →';
+ document.getElementById('introConfirm').textContent=restarting?'開始新的成長旅程 →':'開始我的心靈旅程 →';
  if(restarting){
   const c=petConfig(),n=c.name||'小哲';
   document.getElementById('graduationTitle').textContent='恭喜！'+n+'完成成長旅程！';
