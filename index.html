@@ -408,7 +408,7 @@ function petActionForThisOpen(){
 }
 const PET_CURRENT_ACTION=petActionForThisOpen();
 function petConfig(){if(!S.pet||typeof S.pet!=="object")S.pet={name:"小哲",gender:"neutral",personality:"gentle",dailyState:"auto",talks:0};if(S.pet.species==="secret"){S.pet.species="dino";localStorage.setItem(KEY,JSON.stringify(S));}return S.pet}
-function petPoints(r){if(!r||typeof r!=="object")return 0;let mood=r.mood?5:0,n=(r.note||"").trim(),p=(r.practiceNote||"").trim();return Math.min(65,mood+(n?Math.min(20,8+Math.floor(n.length/10)*3):0)+(p?Math.min(35,15+Math.floor(p.length/10)*4):0)+(r.reflection?5:0))}
+function petPoints(r){if(!r||typeof r!=="object")return 0;let mood=r.mood?5:0,n=(r.note||"").trim(),p=(r.practiceNote||"").trim();return Math.min(65,mood+(n?Math.min(20,8+Math.floor(n.length/5)*3):0)+(p?Math.min(35,15+Math.floor(p.length/5)*4):0)+(r.reflection?5:0))}
 function petTotal(){return Object.values(S.days||{}).reduce((a,r)=>a+petPoints(r),0)}
 function petStage(x){let i=0;for(let j=0;j<PET_STAGES.length;j++)if(x>=PET_STAGES[j][1])i=j;return i}
 function petState(){let c=petConfig();if(c.dailyState!=="auto"&&PET_STATES[c.dailyState])return c.dailyState;let r=S.days[localToday()]||{},m=r.mood||"";if(m==="焦慮")return"worried";if(m==="疲憊")return"tired";if(m==="開心")return"happy";if(m==="生氣")return"thinking";if(m==="有力量")return"brave";if(m==="平靜")return"calm";if(r.practiceNote)return"reading";return["curious","resting","thinking","calm"][new Date(localToday()+"T00:00:00").getDate()%4]}
@@ -507,7 +507,7 @@ function updatePet(){
  petCustomName.value=c.name||"小哲";petGender.value=c.gender||"neutral";petPersonality.value=c.personality||"gentle";
  if(!petBook.hidden)drawPetBook();
 }
-function drawPetBook(){petBook.innerHTML="<b>修行筆記</b><p>每一次真誠地面對自己，都可能帶來一點改變。下一次蛻變何時發生，留給你和夥伴一起發現。</p><b>成長能量</b><div>每日心情 +5；心情日記 +8～20；今日練習反思 +15～35；今日回應 +5。日記每增加 10 字額外 +3，練習每增加 10 字額外 +4；每個日期最高 65 。每隻夥伴從領養時的 base 能量起獨立累積。每個日期依內容計算一次，重複儲存不會重複加分；修改紀錄會重新計算。</div>"}
+function drawPetBook(){petBook.innerHTML="<b>修行筆記</b><p>每一次真誠地面對自己，都可能帶來一點改變。下一次蛻變何時發生，留給你和夥伴一起發現。</p><b>成長能量</b><div>每日心情 +5；心情日記 +8～20；今日練習反思 +15～35；今日回應 +5。日記每增加 5 字額外 +3，練習每增加 5 字額外 +4；每個日期最高 65 。每隻夥伴從領養時的 base 能量起獨立累積。每個日期依內容計算一次，重複儲存不會重複加分；修改紀錄會重新計算。</div>"}
 function togglePetSettings(){let el=document.getElementById("petSettings"),b=document.getElementById("petSettingsToggle");el.hidden=!el.hidden;b.setAttribute("aria-expanded",String(!el.hidden));b.textContent=el.hidden?"⚙️ 夥伴設定":"⚙️ 完成設定"}
 function togglePetBook(){petBook.hidden=!petBook.hidden;if(!petBook.hidden)drawPetBook()}
 function petInteract(){let c=petConfig();c.talks=(c.talks||0)+1;localStorage.setItem(KEY,JSON.stringify(S));showPetDialogue(petLine(c.talks))}
