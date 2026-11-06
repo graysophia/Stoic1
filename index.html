@@ -556,7 +556,44 @@ function exportTxtDiary(){
  a.href=url;a.download="日日斯多噶_日記與練習.txt";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toastMsg("TXT 日記已匯出");
 }
 function exportData(){let b=new Blob([JSON.stringify({version:"2026-10-24",exportedAt:new Date().toISOString(),data:S},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="日日斯多噶_我的人生軌跡_"+(()=>{const d=new Date();return String(d.getFullYear())+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")})()+".json";a.click();URL.revokeObjectURL(a.href);toastMsg("日記已匯出")}
-importFile.addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.data||!x.data.days)throw 0;S.days={...S.days,...x.data.days};S.xp=Math.max(S.xp||0,x.data.xp||0);if(x.data.pet)S.pet=x.data.pet;if(x.data.bookmarks&&typeof x.data.bookmarks==="object"&&!Array.isArray(x.data.bookmarks))S.bookmarks={...(S.bookmarks||{}),...x.data.bookmarks};localStorage.setItem(KEY,JSON.stringify(S));render();toastMsg("日記已匯入")}catch(_){toastMsg("檔案格式不正確")}};r.readAsText(f)});
+// 完整 JSON 還原：驗證檔案、可選覆蓋或合併、保護現有資料。
+importFile.addEventListener("change",async e=>{
+ const input=e.target, file=input.files&&input.files[0];
+ if(!file)return;
+ const plain=v=>v!==null&&typeof v==='object'&&!Array.isArray(v);
+ const validDate=k=>/^\d{4}-\d{2}-\d{2}$/.test(k)&&!Number.isNaN(Date.parse(k+'T00:00:00'));
+ const safeKeys=o=>Object.keys(o).every(k=>!['__proto__','constructor','prototype'].includes(k));
+ try{
+  if(file.size>20*1024*1024)throw Error('檔案超過 20 MB，請確認備份檔是否正確');
+  const parsed=JSON.parse(await file.text());
+  if(!plain(parsed)||!plain(parsed.data)||!plain(parsed.data.days)||!safeKeys(parsed.data)||!safeKeys(parsed.data.days))throw Error('這不是有效的日日斯多噶 JSON 備份');
+  const incoming=parsed.data;
+  if(!Object.keys(incoming.days).every(validDate)||!Object.values(incoming.days).every(plain))throw Error('每日紀錄格式不正確');
+  if(incoming.pet!==undefined&&!plain(incoming.pet))throw Error('夥伴資料格式不正確');
+  if(incoming.bookmarks!==undefined&&(!plain(incoming.bookmarks)||!safeKeys(incoming.bookmarks)))throw Error('摺頁資料格式不正確');
+  if(incoming.completedCompanions!==undefined&&!Array.isArray(incoming.completedCompanions))throw Error('畢業相簿格式不正確');
+  const count=Object.keys(incoming.days).length, graduates=Array.isArray(incoming.completedCompanions)?incoming.completedCompanions.length:0;
+  const mode=prompt('找到 '+count+' 天紀錄、'+graduates+' 筆畢業紀錄。\n\n請選擇匯入方式：\n1＝完整還原（以備份取代目前資料）\n2＝合併（保留目前其他資料；同日期以備份為準）\n\n輸入 1 或 2；按取消則不匯入。','2');
+  if(mode===null)return;
+  if(mode!=='1'&&mode!=='2'){toastMsg('未匯入：請輸入 1 或 2');return}
+  if(!confirm(mode==='1'?'確定完整還原？目前資料將被備份內容取代。':'確定合併？相同日期的紀錄將以匯入檔為準。'))return;
+  // 先保存目前資料快照；不改動目前已存在的 localStorage，直到新資料驗證成功。
+  const current=JSON.parse(JSON.stringify(S));
+  const restored=mode==='1'?{...incoming}:{...current,...incoming,
+    days:{...(current.days||{}),...incoming.days},
+    bookmarks:{...(current.bookmarks||{}),...(incoming.bookmarks||{})}};
+  if(mode==='2'&&Array.isArray(current.completedCompanions)&&Array.isArray(incoming.completedCompanions)){
+   const all=[...current.completedCompanions];
+   const ids=new Set(all.map(x=>JSON.stringify([x.id||'',x.name||'',x.species||'',x.completedAt||''])));
+   for(const item of incoming.completedCompanions){const id=JSON.stringify([item.id||'',item.name||'',item.species||'',item.completedAt||'']);if(!ids.has(id)){all.push(item);ids.add(id)}}
+   restored.completedCompanions=all;
+  }
+  localStorage.setItem(KEY,JSON.stringify(restored));
+  // 重載讓成長、畢業相簿、摺頁與所有統計重新從完整資料初始化。
+  location.reload();
+ }catch(err){console.warn('Stoic import failed',err);alert('匯入失敗：'+(err.message||'無法讀取備份檔')+'。原本資料未變更。')}
+ finally{input.value=''}
+});
 let deferredPrompt;addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;install.classList.add("show");install.onclick=async()=>{deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;install.classList.remove("show")}});
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));render();
 
