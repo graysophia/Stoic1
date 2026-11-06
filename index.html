@@ -238,10 +238,21 @@ textarea{width:100%;min-height:105px;border:1px solid var(--line);border-radius:
 .stoic-cal-dot{width:12px;height:12px;border-radius:4px;display:inline-block;border:1px solid #00000010}
 .stoic-cal-dot.complete{background:#dfeadf}
 .stoic-cal-dot.incomplete{background:#f4d7bb}
+</style><style id="stoic-memo-style">
+.stoic-memo-quote-wrap{position:relative}.stoic-memo-quote-wrap .quote{padding-right:42px}.stoic-memo-corner{position:absolute;right:0;top:10px;z-index:2}.stoic-memo-icon{display:grid;place-items:center;width:36px;height:40px;padding:4px;background:transparent;border:0;color:#f2dfb2;cursor:pointer}.stoic-memo-icon svg{width:26px;height:30px;stroke:currentColor;stroke-width:1.8;fill:transparent;stroke-linejoin:round}.stoic-memo-icon[aria-pressed="true"] svg{fill:#f2dfb2;stroke:#f2dfb2}.stoic-memo-menu[hidden]{display:none!important}.stoic-memo-menu{position:absolute;right:0;top:42px;min-width:170px;z-index:5;padding:7px;border-radius:12px;background:#fffdf7;box-shadow:0 8px 28px #14221855;border:1px solid #dcd9c9}.stoic-memo-menu button{display:block;width:100%;padding:11px 10px;text-align:left;background:transparent;border:0;border-radius:8px;color:#314b39;font-size:13px;font-weight:700}.stoic-memo-menu button:hover,.stoic-memo-menu button:focus-visible{background:#eef1e7}.stoic-memo-overlay[hidden]{display:none!important}.stoic-memo-overlay{position:fixed;inset:0;z-index:100020;background:#1c2a21bd;display:flex;align-items:center;justify-content:center;padding:14px}.stoic-memo-panel{background:#fffdf7;border-radius:20px;width:min(560px,100%);max-height:88dvh;overflow:auto;padding:20px;color:#27372c}.stoic-memo-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.stoic-memo-head h3{margin:0}.stoic-memo-head button{border:0;background:#edf1e8;border-radius:9px;padding:7px 11px}.stoic-memo-item{border:1px solid #deded2;border-radius:14px;padding:14px;margin:12px 0;background:#fbf8ed}.stoic-memo-item small{color:#6b735e}.stoic-memo-item blockquote{margin:9px 0;font:17px/1.7 Georgia,"Noto Serif TC",serif}.stoic-memo-item details{font-size:13px;line-height:1.8}.stoic-memo-item summary{cursor:pointer;color:#426047;font-weight:700}.stoic-memo-item textarea{min-height:65px;margin-top:9px;font-size:14px}.stoic-memo-item .stoic-memo-controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:9px}.stoic-memo-item .stoic-memo-controls button{padding:7px 11px;border:1px solid #d5daca;background:#edf1e8;border-radius:9px;color:#38533e}.stoic-memo-empty{line-height:1.8;color:#6d756c}
+
+/* 摺頁圖示緊鄰主題，縮小且不占用句子空間。 */
+.stoic-memo-theme-row{display:flex;align-items:center;gap:7px;margin-top:18px}
+.stoic-memo-theme-row .theme{margin-top:0}
+.stoic-memo-theme-row .stoic-memo-corner{position:relative;top:auto;right:auto;z-index:6;flex-shrink:0}
+.stoic-memo-theme-row .stoic-memo-icon{width:25px;height:28px;padding:2px}
+.stoic-memo-theme-row .stoic-memo-icon svg{width:17px;height:21px}
+.stoic-memo-theme-row .stoic-memo-menu{top:30px;left:0;right:auto}
+.hero>.quote{padding-right:0;margin-top:17px}
 </style></head><body><main class="app">
 <header class="top"><div><div class="brand">日日斯多噶</div><div class="tag">Daily Stoic · 把注意力帶回自己</div></div><button class="iconBtn" onclick="goToday()">⌂</button></header>
 <button id="install" class="install">📱 加到手機桌面</button>
-<section class="card hero"><div class="dateLine"><div><div class="date" id="date"></div><div class="muted" id="weekday"></div></div><div class="badge" id="streak">連續 0 天</div></div><span class="theme" id="theme"></span><div class="quote" id="quote"></div><div class="explainTitle">今天想告訴你</div><div class="explain" id="explain"></div><div class="practice"><b>🌱 今日練習</b><div id="practice" style="margin-top:5px"></div></div></section>
+<section class="card hero"><div class="dateLine"><div><div class="date" id="date"></div><div class="muted" id="weekday"></div></div><div class="badge" id="streak">連續 0 天</div></div><div class="stoic-memo-theme-row"><span class="theme" id="theme"></span><div class="stoic-memo-corner"><button type="button" id="stoicMemoToggle" class="stoic-memo-icon" aria-pressed="false" aria-expanded="false" aria-label="摺頁選單" title="摺頁"><svg viewBox="0 0 24 28" aria-hidden="true"><path d="M5 2.5h14a1 1 0 0 1 1 1V25l-8-5-8 5V3.5a1 1 0 0 1 1-1Z"/></svg></button><div id="stoicMemoMenu" class="stoic-memo-menu" hidden><button type="button" id="stoicMemoSave">加入摺頁</button><button type="button" id="stoicMemoOpen">📖 我的摺頁</button></div></div></div><div class="quote" id="quote"></div><div class="explainTitle">今天想告訴你</div><div class="explain" id="explain"></div><div class="practice"><b>🌱 今日練習</b><div id="practice" style="margin-top:5px"></div></div></section>
 <section class="card"><h3>今天的心情</h3><div class="moods"><button class="mood" data-m="平靜">🌿 平靜</button><button class="mood" data-m="開心">☀️ 開心</button><button class="mood" data-m="焦慮">🌧️ 焦慮</button><button class="mood" data-m="疲憊">🌙 疲憊</button><button class="mood" data-m="生氣">🔥 生氣</button><button class="mood" data-m="有力量">💪 有力量</button></div><label>寫給今天的自己</label><textarea id="note" placeholder="今天發生了什麼？現在的你正在感受什麼？"></textarea><div style="height:15px"></div><label>✍️ 我的練習紀錄</label><textarea id="practiceNote" placeholder="今天有完成這個練習嗎？發生了什麼？你有什麼發現？"></textarea><div class="row"><button class="primary" onclick="saveDay()">儲存今天</button><button class="secondary" onclick="generateReflection()">✨ 給我一句回應</button></div></section>
 <section class="card"><h3>🪞 給今天的你</h3><div class="ai"><div class="aiTitle">今日回應</div><div id="reflection">先寫下今天的心情，我會根據你的紀錄給你一段簡短回應。</div></div></section>
 <section class="card" id="petSection"><h3>🐣 我的心靈夥伴</h3>
@@ -545,7 +556,7 @@ function exportTxtDiary(){
  a.href=url;a.download="日日斯多噶_日記與練習.txt";document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toastMsg("TXT 日記已匯出");
 }
 function exportData(){let b=new Blob([JSON.stringify({version:"2026-10-24",exportedAt:new Date().toISOString(),data:S},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="日日斯多噶_我的人生軌跡_"+(()=>{const d=new Date();return String(d.getFullYear())+String(d.getMonth()+1).padStart(2,"0")+String(d.getDate()).padStart(2,"0")})()+".json";a.click();URL.revokeObjectURL(a.href);toastMsg("日記已匯出")}
-importFile.addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.data||!x.data.days)throw 0;S.days={...S.days,...x.data.days};S.xp=Math.max(S.xp||0,x.data.xp||0);if(x.data.pet)S.pet=x.data.pet;localStorage.setItem(KEY,JSON.stringify(S));render();toastMsg("日記已匯入")}catch(_){toastMsg("檔案格式不正確")}};r.readAsText(f)});
+importFile.addEventListener("change",e=>{let f=e.target.files[0];if(!f)return;let r=new FileReader();r.onload=()=>{try{let x=JSON.parse(r.result);if(!x.data||!x.data.days)throw 0;S.days={...S.days,...x.data.days};S.xp=Math.max(S.xp||0,x.data.xp||0);if(x.data.pet)S.pet=x.data.pet;if(x.data.bookmarks&&typeof x.data.bookmarks==="object"&&!Array.isArray(x.data.bookmarks))S.bookmarks={...(S.bookmarks||{}),...x.data.bookmarks};localStorage.setItem(KEY,JSON.stringify(S));render();toastMsg("日記已匯入")}catch(_){toastMsg("檔案格式不正確")}};r.readAsText(f)});
 let deferredPrompt;addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;install.classList.add("show");install.onclick=async()=>{deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;install.classList.remove("show")}});
 if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));render();
 
@@ -794,5 +805,26 @@ if(typeof exportData==='function'){
 // Existing imports may replace data; refresh the new views afterwards.
 $('importFile')?.addEventListener('change',()=>setTimeout(()=>{runSearch();backupDue();},400));
 sundayReview();backupDue();
+})();
+</script><div id="stoicMemoModal" class="stoic-memo-overlay" hidden role="dialog" aria-modal="true" aria-label="我的摺頁"><div class="stoic-memo-panel"><div class="stoic-memo-head"><h3>📖 我的摺頁</h3><button type="button" id="stoicMemoClose" aria-label="關閉摺頁">✕ 關閉</button></div><p class="small">收藏觸動你的斯多噶句子，日後隨時回顧。</p><div id="stoicMemoList"></div></div></div><script id="stoic-memo-script">
+(()=>{
+ const $=id=>document.getElementById(id);
+ const modal=$('stoicMemoModal'),list=$('stoicMemoList'),toggle=$('stoicMemoToggle');
+ function items(){if(!S.bookmarks||typeof S.bookmarks!=='object'||Array.isArray(S.bookmarks))S.bookmarks={};return S.bookmarks}
+ function persist(){localStorage.setItem(KEY,JSON.stringify(S))}
+ const menu=$('stoicMemoMenu'),saveButton=$('stoicMemoSave');
+ function refresh(){const on=Object.prototype.hasOwnProperty.call(items(),selected);toggle.setAttribute('aria-pressed',String(on));toggle.title=on?'已收藏・開啟摺頁選單':'開啟摺頁選單';saveButton.textContent=on?'取消摺頁':'加入摺頁'}
+ function closeMenu(){menu.hidden=true;toggle.setAttribute('aria-expanded','false')}
+ toggle.addEventListener('click',()=>{menu.hidden=!menu.hidden;toggle.setAttribute('aria-expanded',String(!menu.hidden))});
+ saveButton.addEventListener('click',()=>{const b=items();if(Object.prototype.hasOwnProperty.call(b,selected)){delete b[selected];toastMsg('已取消摺頁')}else{const e=entry(selected);b[selected]={theme:e.theme,thought:e.thought,explain:e.explain,savedAt:new Date().toISOString()};toastMsg('已加入我的摺頁 ✓')}persist();refresh();closeMenu()});
+ document.addEventListener('click',e=>{if(!e.target.closest('.stoic-memo-corner'))closeMenu()});
+ function node(tag,cls,txt){const n=document.createElement(tag);if(cls)n.className=cls;if(txt!==undefined)n.textContent=txt;return n}
+ function draw(){list.replaceChildren();const b=items(),dates=Object.keys(b).filter(k=>/^\d{4}-\d{2}-\d{2}$/.test(k)).sort().reverse();if(!dates.length){list.append(node('p','stoic-memo-empty','還沒有收藏的摺頁。讀到重要的句子時，按下「加入摺頁」就能保存。'));return}
+ dates.forEach(k=>{const x=b[k];if(!x||typeof x!=='object')return;const e=entry(k);const card=node('article','stoic-memo-item');card.append(node('small','',k+' · '+(x.theme||e.theme)),node('blockquote','', '「'+(x.thought||e.thought)+'」'));
+ const details=node('details');details.append(node('summary','','查看解說'));const expl=node('p','',x.explain||e.explain);details.append(expl);card.append(details);
+ list.append(card)})}
+ $('stoicMemoOpen').addEventListener('click',()=>{closeMenu();draw();modal.hidden=false});$('stoicMemoClose').addEventListener('click',()=>{modal.hidden=true});modal.addEventListener('click',e=>{if(e.target===modal)modal.hidden=true});document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeMenu();if(!modal.hidden)modal.hidden=true}});
+ const originalRender=render;render=function(...args){const result=originalRender.apply(this,args);refresh();closeMenu();return result};
+ refresh();
 })();
 </script></body></html>
