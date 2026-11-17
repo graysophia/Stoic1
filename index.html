@@ -320,6 +320,14 @@ textarea{width:100%;min-height:105px;border:1px solid var(--line);border-radius:
 #introCard.graduation[data-species="mao_bear"] .graduationHero:before{display:block!important;content:"🎓 恭喜完成養成！"!important;position:static!important;text-align:center;font-size:21px;color:#594522;background:none!important;animation:none!important;letter-spacing:0!important}
 #introCard.graduation[data-species="mao_bear"] #graduationSwipeUI{margin-top:12px}
 </style>
+<style id="mao-bear-hide-embedded-caption">
+/* Hide caption only in the adoption thumbnail; the original PNG is unchanged. */
+#petIntro .petChoice[data-species="mao_bear"] img{
+  object-fit:cover!important;
+  object-position:top center!important;
+  clip-path:inset(0 0 20% 0)!important;
+}
+</style>
 </head><body><main class="app">
 <header class="top"><div><div class="brand">日日斯多噶</div><div class="tag">Daily Stoic · 把注意力帶回自己</div></div><button class="iconBtn" onclick="goToday()">⌂</button></header>
 <button id="install" class="install">📱 加到手機桌面</button>
@@ -595,6 +603,7 @@ function petAppearance(x){
  localStorage.setItem(KEY,JSON.stringify(S));
  return c.appearanceIndex;
 }
+PET_SPECIES_LABELS.mao_bear=["好好睡一覺", "發現小美好", "親近大自然", "背起行囊出發", "開心打招呼", "安心休息", "聆聽喜歡的歌", "一步一步探索", "自在地站著", "把愛送出去", "聞聞花香", "沉浸書香", "種下希望", "記錄旅程", "幸運在手中", "坐下歇一會", "靈感來了", "雨中也自在", "用心做料理", "畫出心中風景", "揮拍迎接挑戰", "勇敢再試一次", "披上勇氣", "享受露營時光", "動一動真開心", "收穫滿滿", "把心意送給你", "靜看夜晚星空", "坐著欣賞風景", "和陽光一起成長", "在花園裡微笑", "安靜陪伴自己", "專心完成工作", "讀一本好書", "鍛鍊強壯的自己", "照顧小小綠意", "擁抱閃亮夢想", "為自己喝采", "走進雪白世界", "冬日裡的溫暖", "騎車迎向微風", "在音樂裡放鬆", "與貓咪相伴", "享受眼前時刻", "和朋友聊聊天", "感受花草氣息", "累了就好好休息", "保有童心", "品嚐美味點心", "欣賞美麗夕陽", "分享美好時光", "把快樂送給人", "在綠意裡成長", "帶著勇氣前行", "為自己加冕", "享受當下的平靜", "學習永不停歇", "捧著一束花", "珍惜每個今天", "成為真正的自己"];
 const PET_IMAGE_LABELS=["初始的蛋", "破殼而出", "剛出生", "好奇張望", "搖擺走路", "蹦蹦跳跳", "學會站立", "拍動小翅膀", "練習飛翔", "開心成長", "溫暖的日常", "午睡時光", "喜歡學習", "小小冒險家", "迎向挑戰", "靜靜思考", "遮風擋雨", "更加勇敢", "探索世界", "結交朋友", "羽毛漸豐", "活力奔跑", "勇敢嘗試", "登高遠眺", "專注練習", "接受挫折", "再次出發", "享受過程", "發現興趣", "內心更堅定", "靜心冥想", "閱讀思考", "獨自旅行", "欣賞風景", "幫助他人", "面對風雨", "保持平靜", "學會放下", "心懷感恩", "更加成熟", "羽色變化", "展開雙翼", "迎向朝陽", "耀眼羽冠", "力量累積", "閃耀光芒", "翱翔天際", "守護身邊", "光之軌跡", "鳳鳥之姿", "華麗蛻變", "光輝羽翼", "星空翱翔", "溫暖守護", "鳳凰之形", "內在光芒", "自由飛翔", "智慧與平靜", "閃耀重生", "真正的鳳凰"];
 function updatePet(){
  let c=petConfig(),x=petTotal(),appearance=petAppearance(x);
@@ -844,14 +853,14 @@ addEventListener('DOMContentLoaded',sync);
   const cache=new Map();
   function showArtworkOnly(){
     const url=pet.currentSrc||pet.src;
-    if(!/(?:chick|dog|cat|dino)_\d{2}\.png(?:[?#]|$)/i.test(url))return;
+    if(!/(?:chick|dog|cat|dino|mao_bear)_\d{2}\.png(?:[?#]|$)/i.test(url))return;
     if(cache.has(url)){pet.src=cache.get(url);return;}
     if(!pet.complete||!pet.naturalWidth)return;
     try{
       const c=document.createElement('canvas');
       c.width=pet.naturalWidth;
       // 保留完整角色區（約 82%），僅去除與角色分離的底部文字。
-      c.height=Math.round(pet.naturalHeight*0.82);
+      c.height=Math.round(pet.naturalHeight*(/mao_bear_\d{2}\.png/i.test(url)?0.79:0.82));
       const ctx=c.getContext('2d');
       ctx.imageSmoothingEnabled=false;
       ctx.drawImage(pet,0,0);
