@@ -625,7 +625,17 @@ function updatePet(){
  const pct=100*shownXP/targetXP;
  document.getElementById("petArt").src=PET_IMAGE_SETS[c.species||"chick"][appearance];
  document.getElementById("petStageLabel").textContent=(PET_SPECIES_LABELS[c.species||"chick"]||PET_IMAGE_LABELS)[appearance]||PET_IMAGE_LABELS[appearance]||"初始的蛋";
- if(c.completionPending&&!document.getElementById("petIntro").classList.contains("visible")){c.completionPending=false;localStorage.setItem(KEY,JSON.stringify(S));setTimeout(()=>openPetIntro(true),80);}
+ if(c.completionPending&&!document.getElementById("petIntro").classList.contains("visible")&&!window.petGraduationDelayTimer){
+  // Display the 60th companion appearance for five seconds before graduation.
+  window.petGraduationDelayTimer=setTimeout(()=>{
+    window.petGraduationDelayTimer=null;
+    const current=petConfig();
+    if(!current.completionPending||document.getElementById("petIntro").classList.contains("visible"))return;
+    // Keep the pending state until the user explicitly handles graduation.
+    // Closing the browser here must cause the ceremony to reappear next time.
+    openPetIntro(true);
+  },5000);
+ }
  petDisplayName.textContent=c.name||"小哲";
  petText.textContent="今日狀態 · "+PET_CURRENT_ACTION;
  document.getElementById("petChatButton").textContent="💬 與"+(c.name||"小哲")+"聊聊";
@@ -747,9 +757,16 @@ openPetIntro=function(restarting=false){
  }
 };
 function postponePetGraduation(){
+ const c=petConfig();
+ // Explicitly choosing "later" acknowledges graduation; simply closing the
+ // browser does not. Preserve the finished companion and its memorial record.
+ if(c.completed){
+  archivePetGraduation();
+  c.completionPending=false;
+  localStorage.setItem(KEY,JSON.stringify(S));
+ }
  document.getElementById('petIntro').classList.remove('visible');
  document.body.classList.remove('petIntroOpen');
- // Only close the modal. The completed companion remains visible and records remain intact.
 }
 const _previousConfirmPetAdoption=confirmPetAdoption;
 confirmPetAdoption=function(){
@@ -1045,14 +1062,23 @@ const grid=document.createElement('div');grid.className='companionPage';
 const species=['chick','dog','cat','secret'];
 species.forEach((sp,i)=>{const original=adoption.querySelector('.petChoice[data-species="'+sp+'"]');const b=original.cloneNode(true);b.removeAttribute('onclick');b.removeAttribute('id');b.querySelectorAll('[id]').forEach(el=>el.removeAttribute('id'));b.onclick=()=>{selectGraduationPet(sp);grid.querySelectorAll('.petChoice').forEach(el=>el.classList.toggle('selected',el===b))};grid.append(b)});
 const gradFuture=futurePage();
+// Keep the first-adoption bear portrait identical to the post-graduation adoption portrait.
 const gradBear=bear.cloneNode(true);
+const bearPortrait=()=>BEAR_ADOPTION_IMAGE;
+function syncBearAdoptionPortrait(){
+  for(const card of [bear,gradBear]){
+    const img=card.querySelector('img');
+    if(img){img.src=bearPortrait();img.alt='毛熊正面認養造型';}
+  }
+}
+syncBearAdoptionPortrait();
 gradBear.onclick=()=>{selectGraduationPet('mao_bear');panel.querySelectorAll('.petChoice').forEach(el=>el.classList.toggle('selected',el===gradBear))};
 gradFuture.firstElementChild.replaceWith(gradBear);
 panel.append(grid,gradFuture);const resetGraduation=nav(panel,[grid,gradFuture]);
 const start=document.createElement('button');start.type='button';start.className='gradStart';start.textContent='開始新的旅程 →';start.onclick=()=>startGraduationJourney();const later=document.createElement('button');later.type='button';later.className='gradLater';later.textContent='稍後再選擇';later.onclick=()=>postponePetGraduation();panel.append(start,later);hero.append(panel);
 function syncPortraits(){['chick','dog','cat'].forEach(sp=>{const original=adoption.querySelector('.petChoice[data-species="'+sp+'"] img');const target=grid.querySelector('.petChoice[data-species="'+sp+'"] img');if(original&&target&&original.src)target.src=original.src})}
 function syncDino(){let unlocked=false;try{unlocked=localStorage.getItem('stoic_dino_unlocked_v1')==='1'||(typeof petConfig==='function'&&petConfig().species==='dino')||(typeof S!=='undefined'&&Array.isArray(S.completedCompanions)&&S.completedCompanions.some(r=>r.species==='dino'))}catch(e){};const card=grid.querySelector('[data-species="secret"]');if(!card)return;card.classList.toggle('unlocked',unlocked);const label=card.querySelector('.secretName');if(label)label.textContent=unlocked?'阿龍':'隱藏版';let img=card.querySelector('.dinoPreview');if(!img){img=document.createElement('img');img.className='dinoPreview';img.alt='阿龍';card.insertBefore(img,card.querySelector('.secretName'))}const existing=document.querySelector('#introCard .dinoPreview');if(existing&&existing.src)img.src=existing.src;else{const old=document.getElementById('choiceDino');if(old&&old.src)img.src=old.src}}
-const oldOpen=openPetIntro;openPetIntro=function(restarting=false){const result=oldOpen(restarting);resetAdoption();resetGraduation();grid.querySelectorAll('.petChoice').forEach(el=>el.classList.remove('selected'));syncPortraits();syncDino();return result};
+const oldOpen=openPetIntro;openPetIntro=function(restarting=false){const result=oldOpen(restarting);syncBearAdoptionPortrait();resetAdoption();resetGraduation();grid.querySelectorAll('.petChoice').forEach(el=>el.classList.remove('selected'));syncPortraits();syncDino();return result};
 // The initial adoption modal may already have opened before this enhancement loads.
 syncDino();
 })();
