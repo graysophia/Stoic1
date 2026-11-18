@@ -765,6 +765,7 @@ function postponePetGraduation(){
  if(c.completed){
   archivePetGraduation();
   c.completionPending=false;
+  localStorage.setItem('stoic-pet-awaiting-adoption-v1','1');
   localStorage.setItem(KEY,JSON.stringify(S));
  }
  document.getElementById('petIntro').classList.remove('visible');
@@ -782,6 +783,7 @@ confirmPetAdoption=function(){
   }
  }
  _previousConfirmPetAdoption();
+  if(!petConfig().completed && petConfig().species) localStorage.removeItem('stoic-pet-awaiting-adoption-v1');
 };
 
 function archivePetGraduation(){
@@ -1089,4 +1091,39 @@ const hero=document.getElementById('graduationHero');if(!hero||document.getEleme
 const title=document.createElement('div');title.id='bearGradTitle';title.textContent='🎓 恭喜完成養成！';hero.insertBefore(title,hero.firstChild);
 const message=document.createElement('div');message.id='bearGradMessage';message.innerHTML='你與毛熊一起走過了這段成長旅程，<br>也完成了「最好的夥伴」的蛻變。<br>謝謝你這段時間的陪伴與練習！';
 const panel=document.getElementById('graduationSwipeUI');if(panel)hero.insertBefore(message,panel);else hero.appendChild(message);
-}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();</script></body></html>
+}if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);else init();})();</script><script id="pet-return-adoption-reminder">
+(function(){
+ const reminderKey='stoic-pet-awaiting-adoption-v1';
+ function showOnNextVisit(){
+  const c=petConfig();
+  if(!c.completed||!c.species||c.completionPending)return;
+  if(localStorage.getItem(reminderKey)!=='1'&&!c.archived)return;
+  localStorage.setItem(reminderKey,'1');
+  if(document.getElementById('petIntro').classList.contains('visible'))return;
+  openPetIntro(false);
+  document.getElementById('introTitle').textContent='🌱 開始下一段心靈旅程';
+  document.getElementById('introDescription').textContent='上一位夥伴已順利畢業！請選擇並命名下一位心靈夥伴。你可以稍後再選擇，下次開啟網站時仍會提醒你。';
+  document.getElementById('introConfirm').textContent='開始新的旅程 →';
+  document.getElementById('introLater').style.display='block';
+ }
+ const priorConfirm=confirmPetAdoption;
+ confirmPetAdoption=function(...args){
+  const wasSelected=!!selectedSpecies;
+  const result=priorConfirm.apply(this,args);
+  if(wasSelected && !petConfig().completed && petConfig().species){
+   localStorage.removeItem(reminderKey);
+   document.getElementById('introLater').style.display='';
+  }
+  return result;
+ };
+ const priorOpen=openPetIntro;
+ openPetIntro=function(restarting=false){
+  const result=priorOpen(restarting);
+  if(restarting || localStorage.getItem(reminderKey)!=='1')
+   document.getElementById('introLater').style.display='';
+  return result;
+ };
+ function init(){requestAnimationFrame(showOnNextVisit)}
+ if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+</script></body></html>
