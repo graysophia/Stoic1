@@ -701,7 +701,9 @@ importFile.addEventListener("change",async e=>{
  finally{input.value=''}
 });
 let deferredPrompt;addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredPrompt=e;install.classList.add("show");install.onclick=async()=>{deferredPrompt.prompt();await deferredPrompt.userChoice;deferredPrompt=null;install.classList.remove("show")}});
-if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));render();
+if("serviceWorker"in navigator)addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+// Allow the welcome/adoption overlay to open before the first full journal render.
+addEventListener("DOMContentLoaded",()=>requestAnimationFrame(()=>render()),{once:true});
 
 let selectedSpecies=null;
 function choosePet(species){selectedSpecies=species;document.querySelectorAll('.petChoice').forEach(el=>el.classList.toggle('selected',el.dataset.species===species));document.getElementById('introConfirm').disabled=false;}
